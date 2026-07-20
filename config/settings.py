@@ -36,6 +36,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "core.apps.CoreConfig",
     "accounts.apps.AccountsConfig",
+    "knowledge.apps.KnowledgeConfig",
 ]
 
 
@@ -157,3 +158,8 @@ AI_MODEL = os.getenv("AI_MODEL", "")
 LOGIN_URL = "accounts:login"
 LOGIN_REDIRECT_URL = "accounts:portal"
 LOGOUT_REDIRECT_URL = "accounts:login"
+
+# Uploaded knowledge documents
+
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR / "media"
