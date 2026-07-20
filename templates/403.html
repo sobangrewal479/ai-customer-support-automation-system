@@ -1,0 +1,78 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Access Denied | Harbor &amp; Pine Living</title>
+
+    <link
+        rel="stylesheet"
+        href="{% static 'css/site.css' %}"
+    >
+</head>
+<body>
+    <header class="site-header">
+        <div class="header-inner">
+            <div class="brand">
+                <span class="brand-mark">H&amp;P</span>
+
+                <div>
+                    <p class="brand-name">Harbor &amp; Pine</p>
+                    <p class="brand-subtitle">Living</p>
+                </div>
+            </div>
+
+            <p class="location">Secure Staff Portal</p>
+        </div>
+    </header>
+
+    <main class="page">
+        <section class="hero">
+            <div class="hero-content">
+                <p class="eyebrow">Permission required</p>
+
+                <h1>Access denied.</h1>
+
+                <p class="description">
+                    Your account is authenticated, but it has not
+                    been assigned an approved staff role.
+                </p>
+            </div>
+
+            <aside class="support-card">
+                <p class="card-label">Account security</p>
+                <h2>Contact an administrator</h2>
+
+                <p class="description">
+                    An administrator must assign your account to
+                    the Support Agent role before you can access
+                    the staff portal.
+                </p>
+
+                <form
+                    method="post"
+                    action="{% url 'accounts:logout' %}"
+                >
+                    {% csrf_token %}
+                    <button type="submit">
+                        Sign out safely
+                    </button>
+                </form>
+            </aside>
+        </section>
+    </main>
+
+    <footer class="site-footer">
+        <p>
+            Harbor &amp; Pine Living, Inc.
+            <span>Internal staff portal</span>
+        </p>
+    </footer>
+</body>
+</html>

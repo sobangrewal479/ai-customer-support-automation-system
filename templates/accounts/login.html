@@ -1,0 +1,89 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Staff Login | Harbor &amp; Pine Living</title>
+
+    <link
+        rel="stylesheet"
+        href="{% static 'css/site.css' %}"
+    >
+</head>
+<body>
+    <header class="site-header">
+        <div class="header-inner">
+            <div class="brand">
+                <span class="brand-mark">H&amp;P</span>
+
+                <div>
+                    <p class="brand-name">Harbor &amp; Pine</p>
+                    <p class="brand-subtitle">Living</p>
+                </div>
+            </div>
+
+            <p class="location">Secure Staff Portal</p>
+        </div>
+    </header>
+
+    <main class="page">
+        <section class="hero">
+            <div class="hero-content">
+                <p class="eyebrow">Authorized Staff Only</p>
+
+                <h1>Support team login.</h1>
+
+                <p class="description">
+                    Sign in to securely access customer-support
+                    cases, handoffs, leads, and operational tools.
+                </p>
+            </div>
+
+            <section class="support-card">
+                <p class="card-label">Staff access</p>
+                <h2>Welcome back</h2>
+
+                {% if form.errors %}
+                    <p>
+                        The username or password is incorrect.
+                        Please try again.
+                    </p>
+                {% endif %}
+
+                <form method="post">
+                    {% csrf_token %}
+
+                    <p>
+                        <label for="{{ form.username.id_for_label }}">
+                            Username
+                        </label>
+                        {{ form.username }}
+                    </p>
+
+                    <p>
+                        <label for="{{ form.password.id_for_label }}">
+                            Password
+                        </label>
+                        {{ form.password }}
+                    </p>
+
+                    <button type="submit">Sign in securely</button>
+                </form>
+            </section>
+        </section>
+    </main>
+
+    <footer class="site-footer">
+        <p>
+            Harbor &amp; Pine Living, Inc.
+            <span>Internal staff portal</span>
+        </p>
+    </footer>
+</body>
+</html>

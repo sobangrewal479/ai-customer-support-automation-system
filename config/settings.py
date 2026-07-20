@@ -35,6 +35,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "core.apps.CoreConfig",
+    "accounts.apps.AccountsConfig",
 ]
 
 
@@ -150,3 +151,9 @@ AI_PROVIDER = os.getenv("AI_PROVIDER", "openai")
 AI_API_KEY = os.getenv("AI_API_KEY", "")
 
 AI_MODEL = os.getenv("AI_MODEL", "")
+
+# Authentication redirects
+
+LOGIN_URL = "accounts:login"
+LOGIN_REDIRECT_URL = "accounts:portal"
+LOGOUT_REDIRECT_URL = "accounts:login"
