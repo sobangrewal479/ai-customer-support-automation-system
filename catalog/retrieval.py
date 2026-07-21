@@ -46,6 +46,12 @@ def score_product(product, normalized_query, query_tokens):
     if normalized_query == normalized_sku:
         return 100, ("sku",)
 
+    if (
+        normalized_sku
+        and normalized_sku in normalized_query
+    ):
+        return 90, ("sku",)
+
     if normalized_query == normalized_name:
         return 80, ("product_name",)
 

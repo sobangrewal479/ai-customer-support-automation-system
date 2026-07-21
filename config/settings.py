@@ -36,8 +36,9 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
         "core.apps.CoreConfig",
     "accounts.apps.AccountsConfig",
-    "knowledge.apps.KnowledgeConfig",
+        "knowledge.apps.KnowledgeConfig",
     "catalog.apps.CatalogConfig",
+    "support_chat.apps.SupportChatConfig",
 ]
 
 

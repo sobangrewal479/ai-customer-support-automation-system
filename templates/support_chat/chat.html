@@ -1,0 +1,236 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <meta
+        name="description"
+        content="Harbor & Pine Living customer-support chat."
+    >
+
+    <title>Support Chat | Harbor & Pine Living</title>
+
+    <link
+        rel="stylesheet"
+        href="{% static 'css/site.css' %}"
+    >
+
+    <link
+        rel="stylesheet"
+        href="{% static 'css/chat.css' %}"
+    >
+</head>
+<body>
+    <header class="site-header">
+        <div class="header-inner">
+            <a
+                class="brand chat-brand-link"
+                href="/"
+            >
+                <span class="brand-mark">H&amp;P</span>
+
+                <span>
+                    <span class="brand-name">
+                        Harbor &amp; Pine
+                    </span>
+
+                    <span class="brand-subtitle">
+                        Living
+                    </span>
+                </span>
+            </a>
+
+            <p class="location">Customer Support</p>
+        </div>
+    </header>
+
+    <main class="chat-page">
+        <section class="chat-layout">
+            <aside class="chat-information">
+                <p class="eyebrow">Approved support</p>
+
+                <h1>How can we help?</h1>
+
+                <p class="chat-description">
+                    Ask about Harbor &amp; Pine products,
+                    shipping, returns, care instructions,
+                    policies, and other approved support
+                    information.
+                </p>
+
+                <div class="privacy-notice">
+                    <strong>Privacy notice</strong>
+
+                    <p>
+                        Do not share passwords, full payment-card
+                        details, bank information, government IDs,
+                        or other sensitive information in chat.
+                    </p>
+                </div>
+
+                <div class="support-boundaries">
+                    <h2>This support chat can help with:</h2>
+
+                    <ul>
+                        <li>Approved FAQ and policy information</li>
+                        <li>Product details and availability</li>
+                        <li>Approved document-based answers</li>
+                        <li>Safe next steps when evidence is unavailable</li>
+                    </ul>
+                </div>
+
+                <p class="response-target">
+                    Human-support target: within one business day.
+                    This is a target, not a guarantee.
+                </p>
+            </aside>
+
+            <section
+                class="chat-shell"
+                aria-labelledby="chat-heading"
+            >
+                <div class="chat-shell-header">
+                    <div>
+                        <p class="chat-status-label">
+                            Harbor &amp; Pine Support
+                        </p>
+
+                        <h2 id="chat-heading">
+                            Customer-support chat
+                        </h2>
+                    </div>
+
+                    <span class="chat-status">
+                        <span class="status-dot"></span>
+                        Available
+                    </span>
+                </div>
+
+                <div
+                    class="chat-transcript"
+                    aria-live="polite"
+                >
+                    {% if chat_messages %}
+                        {% for chat_message in chat_messages %}
+                            <article
+                                class="
+                                    chat-message
+                                    chat-message--{{ chat_message.sender_type }}
+                                "
+                            >
+                                <p class="chat-message-sender">
+                                    {{ chat_message.get_sender_type_display }}
+                                </p>
+
+                                <p class="chat-message-text">
+                                    {{ chat_message.message }}
+                                </p>
+
+                                {% if chat_message.source_references %}
+                                    <div class="chat-sources">
+                                        <span>Source:</span>
+
+                                        {% for source in chat_message.source_references %}
+                                            <small>
+                                                {{ source.source_label }}
+                                            </small>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </article>
+                        {% endfor %}
+                    {% else %}
+                        <article class="chat-message chat-message--assistant">
+                            <p class="chat-message-sender">
+                                Harbor &amp; Pine Support
+                            </p>
+
+                            <p class="chat-message-text">
+                                Hello! Ask me an approved product,
+                                shipping, return, care, or policy
+                                question.
+                            </p>
+                        </article>
+                    {% endif %}
+                </div>
+
+                <form
+                    class="chat-form"
+                    method="post"
+                    novalidate
+                >
+                    {% csrf_token %}
+
+                    {% if error %}
+                        <div
+                            class="chat-error"
+                            role="alert"
+                        >
+                            {{ error }}
+                        </div>
+                    {% endif %}
+
+                    {% if not chat_session.privacy_acknowledged %}
+                        <label class="privacy-confirmation">
+                            <input
+                                type="checkbox"
+                                name="privacy_acknowledged"
+                                value="yes"
+                            >
+
+                            <span>
+                                I understand the privacy notice and
+                                will not submit sensitive information.
+                            </span>
+                        </label>
+                    {% else %}
+                        <p class="privacy-confirmed">
+                            Privacy notice acknowledged.
+                        </p>
+                    {% endif %}
+
+                    <label
+                        class="chat-input-label"
+                        for="message"
+                    >
+                        Your question
+                    </label>
+
+                    <textarea
+                        id="message"
+                        name="message"
+                        rows="4"
+                        maxlength="{{ max_message_length }}"
+                        placeholder="Example: How long does standard shipping take?"
+                        required
+                    ></textarea>
+
+                    <div class="chat-form-footer">
+                        <span>
+                            Maximum {{ max_message_length }} characters
+                        </span>
+
+                        <button type="submit">
+                            Send message
+                        </button>
+                    </div>
+                </form>
+            </section>
+        </section>
+    </main>
+
+    <footer class="site-footer">
+        <p>
+            Harbor &amp; Pine Living, Inc.
+            <span>Fictional portfolio client</span>
+        </p>
+    </footer>
+</body>
+</html>
