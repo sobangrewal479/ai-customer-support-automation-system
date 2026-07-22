@@ -40,7 +40,8 @@ class ChatOrchestrationTests(TestCase):
             "dimensions": "18 x 8 x 6 in",
             "care_instructions": "Wipe with a damp cloth.",
             "product_url": (
-                f"https://harborandpine.example/products/{sku.lower()}"
+                "https://harborandpine.example/products/"
+                f"{sku.lower()}"
             ),
             "last_updated": date(2026, 7, 1),
             "data_owner": "Catalog Manager",
@@ -121,6 +122,7 @@ class ChatOrchestrationTests(TestCase):
             status=KnowledgeDocument.Status.ACTIVE,
             is_indexed=True,
         )
+
         KnowledgeChunk.objects.create(
             document=document,
             chunk_index=0,
@@ -208,6 +210,40 @@ class ChatOrchestrationTests(TestCase):
             2,
         )
 
+    def test_order_status_question_requests_secure_verification(
+        self,
+    ):
+        _, assistant_message = process_customer_message(
+            self.session,
+            "Where is my order?",
+        )
+
+        self.session.refresh_from_db()
+
+        self.assertEqual(
+            assistant_message.detected_intent,
+            ChatMessage.Intent.ORDER,
+        )
+        self.assertEqual(
+            assistant_message.resolution_path,
+            ChatSession.ResolutionPath.ORDER,
+        )
+        self.assertIn(
+            "exact order ID",
+            assistant_message.message,
+        )
+        self.assertIn(
+            "billing ZIP",
+            assistant_message.message,
+        )
+        self.assertEqual(
+            self.session.outcome,
+            ChatSession.Outcome.IN_PROGRESS,
+        )
+        self.assertEqual(
+            UnansweredQuestion.objects.count(),
+            0,
+        )
 
     def test_load_rating_question_falls_back_even_if_document_mentions_it(
         self,
@@ -246,21 +282,19 @@ class ChatOrchestrationTests(TestCase):
             assistant_message.detected_intent,
             ChatMessage.Intent.UNSUPPORTED,
         )
-
         self.assertEqual(
             assistant_message.message,
             SAFE_FALLBACK,
         )
-
         self.assertEqual(
             self.session.outcome,
             ChatSession.Outcome.FALLBACK,
         )
-
         self.assertEqual(
             UnansweredQuestion.objects.count(),
             1,
         )
+
     def test_unknown_question_creates_fallback_record(self):
         _, assistant_message = process_customer_message(
             self.session,
@@ -297,6 +331,7 @@ class ChatOrchestrationTests(TestCase):
         second_session = ChatSession.objects.create(
             privacy_acknowledged=True,
         )
+
         process_customer_message(
             second_session,
             question,

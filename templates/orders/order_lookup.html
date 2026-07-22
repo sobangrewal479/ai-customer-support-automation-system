@@ -1,0 +1,221 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <meta
+        name="description"
+        content="Secure Harbor & Pine order lookup."
+    >
+
+    <title>Secure Order Lookup | Harbor & Pine Living</title>
+
+    <link
+        rel="stylesheet"
+        href="{% static 'css/site.css' %}"
+    >
+
+    <link
+        rel="stylesheet"
+        href="{% static 'css/chat.css' %}"
+    >
+</head>
+<body>
+    <header class="site-header">
+        <div class="header-inner">
+            <a
+                class="brand chat-brand-link"
+                href="/"
+            >
+                <span class="brand-mark">H&amp;P</span>
+
+                <span>
+                    <span class="brand-name">
+                        Harbor &amp; Pine
+                    </span>
+
+                    <span class="brand-subtitle">
+                        Living
+                    </span>
+                </span>
+            </a>
+
+            <p class="location">Secure Order Lookup</p>
+        </div>
+    </header>
+
+    <main class="chat-page">
+        <section class="chat-layout">
+            <aside class="chat-information">
+                <p class="eyebrow">Private verification</p>
+
+                <h1>Check your order</h1>
+
+                <p class="chat-description">
+                    Enter the exact order ID and the matching
+                    five-digit billing ZIP.
+                </p>
+
+                <div class="privacy-notice">
+                    <strong>Privacy protection</strong>
+
+                    <p>
+                        The lookup will not reveal customer names,
+                        email addresses, billing ZIP codes, purchased
+                        items, payment details, or order totals.
+                    </p>
+                </div>
+
+                <div class="support-boundaries">
+                    <h2>After successful verification:</h2>
+
+                    <ul>
+                        <li>Current order status</li>
+                        <li>Carrier information when available</li>
+                        <li>Tracking reference when available</li>
+                        <li>Estimated arrival wording</li>
+                        <li>An approved next step</li>
+                    </ul>
+                </div>
+
+                <p class="response-target">
+                    Repeated unsuccessful verification attempts may
+                    require human-support review.
+                </p>
+            </aside>
+
+            <section
+                class="chat-shell"
+                aria-labelledby="lookup-heading"
+            >
+                <div class="chat-shell-header">
+                    <div>
+                        <p class="chat-status-label">
+                            Harbor &amp; Pine Orders
+                        </p>
+
+                        <h2 id="lookup-heading">
+                            Secure order verification
+                        </h2>
+                    </div>
+
+                    <span class="chat-status">
+                        <span class="status-dot"></span>
+                        Protected
+                    </span>
+                </div>
+
+                <form
+                    class="chat-form"
+                    method="post"
+                    novalidate
+                >
+                    {% csrf_token %}
+
+                    {% if form.non_field_errors %}
+                        <div
+                            class="chat-error"
+                            role="alert"
+                        >
+                            {{ form.non_field_errors }}
+                        </div>
+                    {% endif %}
+
+                    <label
+                        class="chat-input-label"
+                        for="{{ form.order_id.id_for_label }}"
+                    >
+                        {{ form.order_id.label }}
+                    </label>
+
+                    {{ form.order_id }}
+
+                    {% if form.order_id.errors %}
+                        <div
+                            class="chat-error"
+                            role="alert"
+                        >
+                            {{ form.order_id.errors }}
+                        </div>
+                    {% endif %}
+
+                    <label
+                        class="chat-input-label"
+                        for="{{ form.billing_zip.id_for_label }}"
+                        style="margin-top: 20px;"
+                    >
+                        {{ form.billing_zip.label }}
+                    </label>
+
+                    {{ form.billing_zip }}
+
+                    {% if form.billing_zip.errors %}
+                        <div
+                            class="chat-error"
+                            role="alert"
+                        >
+                            {{ form.billing_zip.errors }}
+                        </div>
+                    {% endif %}
+
+                    <div class="chat-form-footer">
+                        <a href="{% url 'support_chat:chat' %}">
+                            Return to support chat
+                        </a>
+
+                        <button type="submit">
+                            Verify order
+                        </button>
+                    </div>
+                </form>
+
+                {% if lookup_result %}
+                    <div
+                        class="chat-transcript"
+                        aria-live="polite"
+                    >
+                        <article
+                            class="
+                                chat-message
+                                chat-message--assistant
+                            "
+                        >
+                            <p class="chat-message-sender">
+                                Order lookup result
+                            </p>
+
+                            <p class="chat-message-text">
+                                {{ lookup_result.message }}
+                            </p>
+                        </article>
+
+                        {% if lookup_result.requires_security_handoff %}
+                            <div
+                                class="chat-error"
+                                role="alert"
+                            >
+                                Further verification requires
+                                human-support review.
+                            </div>
+                        {% endif %}
+                    </div>
+                {% endif %}
+            </section>
+        </section>
+    </main>
+
+    <footer class="site-footer">
+        <p>
+            Harbor &amp; Pine Living, Inc.
+            <span>Fictional portfolio client</span>
+        </p>
+    </footer>
+</body>
+</html>

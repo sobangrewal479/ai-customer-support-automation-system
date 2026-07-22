@@ -37,10 +37,10 @@ INSTALLED_APPS = [
         "core.apps.CoreConfig",
     "accounts.apps.AccountsConfig",
         "knowledge.apps.KnowledgeConfig",
-    "catalog.apps.CatalogConfig",
+        "catalog.apps.CatalogConfig",
     "support_chat.apps.SupportChatConfig",
+    "orders.apps.OrdersConfig",
 ]
-
 
 # Middleware
 

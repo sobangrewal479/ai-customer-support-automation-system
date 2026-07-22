@@ -26,6 +26,13 @@ GREETING_RESPONSE = (
     "policies, and approved support information."
 )
 
+ORDER_VERIFICATION_PROMPT = (
+    "I can help check an order. For privacy, please use the "
+    "secure order lookup form and provide the exact order ID "
+    "and matching billing ZIP. Do not include payment-card "
+    "details or other sensitive information."
+)
+
 GREETING_WORDS = {
     "hello",
     "hi",
@@ -43,6 +50,20 @@ UNSUPPORTED_LOAD_PATTERNS = (
     re.compile(
         r"\b(?:weight|load)\s+"
         r"(?:capacity|limit|rating)\b"
+    ),
+)
+
+ORDER_LOOKUP_PATTERNS = (
+    re.compile(
+        r"\bwhere\s+is\s+my\s+order\b"
+    ),
+    re.compile(
+        r"\b(?:where is|track|tracking|check|find)\b"
+        r".*\border\b"
+    ),
+    re.compile(
+        r"\border\b.*\b"
+        r"(?:status|track|tracking|delivery|arrive|arrival)\b"
     ),
 )
 
@@ -71,12 +92,22 @@ def is_greeting(query):
 
     return normalized_query in GREETING_WORDS
 
+
 def is_unsupported_load_question(query):
     normalized_query = normalize_topic(query)
 
     return any(
         pattern.search(normalized_query)
         for pattern in UNSUPPORTED_LOAD_PATTERNS
+    )
+
+
+def is_order_lookup_request(query):
+    normalized_query = normalize_topic(query)
+
+    return any(
+        pattern.search(normalized_query)
+        for pattern in ORDER_LOOKUP_PATTERNS
     )
 
 
@@ -105,28 +136,38 @@ def build_product_source(product):
     return {
         "source_type": "product",
         "source_id": product.sku,
-        "source_label": f"{product.product_name} ({product.sku})",
+        "source_label": (
+            f"{product.product_name} ({product.sku})"
+        ),
         "title": product.product_name,
     }
 
 
 def compose_product_answer(product):
     answer_parts = [
-        f"{product.product_name} ({product.sku}) is in the "
-        f"{product.category} collection.",
+        (
+            f"{product.product_name} ({product.sku}) is in the "
+            f"{product.category} collection."
+        ),
         f"The approved price is ${product.price_usd:.2f}.",
         product.short_description,
         get_availability_message(product),
     ]
 
     if product.material:
-        answer_parts.append(f"Material: {product.material}.")
+        answer_parts.append(
+            f"Material: {product.material}."
+        )
 
     if product.color:
-        answer_parts.append(f"Color: {product.color}.")
+        answer_parts.append(
+            f"Color: {product.color}."
+        )
 
     if product.dimensions:
-        answer_parts.append(f"Dimensions: {product.dimensions}.")
+        answer_parts.append(
+            f"Dimensions: {product.dimensions}."
+        )
 
     if product.care_instructions:
         answer_parts.append(
@@ -141,7 +182,9 @@ def build_response(query):
         return ChatResponse(
             text=GREETING_RESPONSE,
             intent=ChatMessage.Intent.GREETING,
-            resolution_path=ChatSession.ResolutionPath.NONE,
+            resolution_path=(
+                ChatSession.ResolutionPath.NONE
+            ),
             source_references=(),
             decision_metadata={
                 "route": "greeting",
@@ -153,7 +196,9 @@ def build_response(query):
         return ChatResponse(
             text=SAFE_FALLBACK,
             intent=ChatMessage.Intent.UNSUPPORTED,
-            resolution_path=ChatSession.ResolutionPath.FALLBACK,
+            resolution_path=(
+                ChatSession.ResolutionPath.FALLBACK
+            ),
             source_references=(),
             decision_metadata={
                 "route": "unsupported_load_rating",
@@ -161,11 +206,26 @@ def build_response(query):
             outcome=ChatSession.Outcome.FALLBACK,
         )
 
+    if is_order_lookup_request(query):
+        return ChatResponse(
+            text=ORDER_VERIFICATION_PROMPT,
+            intent=ChatMessage.Intent.ORDER,
+            resolution_path=(
+                ChatSession.ResolutionPath.ORDER
+            ),
+            source_references=(),
+            decision_metadata={
+                "route": "order_verification_required",
+            },
+            outcome=ChatSession.Outcome.IN_PROGRESS,
+        )
+
     knowledge_results = retrieve_knowledge(
         query,
         faq_limit=3,
         document_limit=3,
     )
+
     product_resolution = resolve_product(
         query,
         limit=5,
@@ -183,7 +243,9 @@ def build_response(query):
         return ChatResponse(
             text=compose_product_answer(product),
             intent=ChatMessage.Intent.PRODUCT,
-            resolution_path=ChatSession.ResolutionPath.PRODUCT,
+            resolution_path=(
+                ChatSession.ResolutionPath.PRODUCT
+            ),
             source_references=(
                 build_product_source(product),
             ),
@@ -205,6 +267,7 @@ def build_response(query):
             if best_result.source_type == "faq"
             else ChatMessage.Intent.DOCUMENT
         )
+
         resolution_path = (
             ChatSession.ResolutionPath.FAQ
             if best_result.source_type == "faq"
@@ -242,7 +305,9 @@ def build_response(query):
                 + "."
             ),
             intent=ChatMessage.Intent.PRODUCT,
-            resolution_path=ChatSession.ResolutionPath.PRODUCT,
+            resolution_path=(
+                ChatSession.ResolutionPath.PRODUCT
+            ),
             source_references=tuple(
                 build_product_source(result.product)
                 for result in product_resolution.matches[:3]
@@ -259,7 +324,9 @@ def build_response(query):
     return ChatResponse(
         text=SAFE_FALLBACK,
         intent=ChatMessage.Intent.UNSUPPORTED,
-        resolution_path=ChatSession.ResolutionPath.FALLBACK,
+        resolution_path=(
+            ChatSession.ResolutionPath.FALLBACK
+        ),
         source_references=(),
         decision_metadata={
             "route": "fallback",
@@ -268,7 +335,10 @@ def build_response(query):
     )
 
 
-def record_unanswered_question(session, question):
+def record_unanswered_question(
+    session,
+    question,
+):
     normalized_topic = normalize_topic(question)
 
     unanswered = UnansweredQuestion.objects.filter(
@@ -291,6 +361,7 @@ def record_unanswered_question(session, question):
                 "last_seen_at",
             ]
         )
+
         return unanswered
 
     return UnansweredQuestion.objects.create(
@@ -301,10 +372,15 @@ def record_unanswered_question(session, question):
 
 
 @transaction.atomic
-def process_customer_message(session, customer_text):
+def process_customer_message(
+    session,
+    customer_text,
+):
     customer_message = ChatMessage.objects.create(
         session=session,
-        sender_type=ChatMessage.SenderType.CUSTOMER,
+        sender_type=(
+            ChatMessage.SenderType.CUSTOMER
+        ),
         message=customer_text,
     )
 
@@ -312,18 +388,24 @@ def process_customer_message(session, customer_text):
 
     assistant_message = ChatMessage.objects.create(
         session=session,
-        sender_type=ChatMessage.SenderType.ASSISTANT,
+        sender_type=(
+            ChatMessage.SenderType.ASSISTANT
+        ),
         message=response.text,
         detected_intent=response.intent,
         resolution_path=response.resolution_path,
         source_references=list(
             response.source_references
         ),
-        decision_metadata=response.decision_metadata,
+        decision_metadata=(
+            response.decision_metadata
+        ),
     )
 
     session.outcome = response.outcome
-    session.resolution_path = response.resolution_path
+    session.resolution_path = (
+        response.resolution_path
+    )
     session.save(
         update_fields=[
             "outcome",
