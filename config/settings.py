@@ -35,6 +35,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
         "core.apps.CoreConfig",
+        "crm_lite.apps.CrmLiteConfig",
     "accounts.apps.AccountsConfig",
         "knowledge.apps.KnowledgeConfig",
         "catalog.apps.CatalogConfig",

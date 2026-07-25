@@ -350,4 +350,45 @@
     .chat-form-footer button {
         width: 100%;
     }
+
+}
+
+/* CRM customer form controls */
+
+.chat-shell .chat-form > input:not([type="checkbox"]),
+.chat-shell .chat-form > select,
+.chat-shell .chat-form > textarea {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+    margin: 6px 0 16px;
+    padding: 11px 12px;
+    border: 1px solid #b8c9d0;
+    border-radius: 6px;
+    background: #ffffff;
+    color: #12354a;
+    font: inherit;
+}
+
+.chat-shell .chat-form > input:not([type="checkbox"]),
+.chat-shell .chat-form > select {
+    min-height: 44px;
+}
+
+.chat-shell .chat-form > textarea {
+    min-height: 150px;
+    resize: vertical;
+}
+
+.chat-shell .chat-form > input:not([type="checkbox"]):focus,
+.chat-shell .chat-form > select:focus,
+.chat-shell .chat-form > textarea:focus {
+    border-color: #008b8c;
+    outline: 2px solid rgba(0, 139, 140, 0.15);
+    outline-offset: 1px;
+}
+
+.chat-shell .chat-input-label {
+    display: block;
+    margin-top: 2px;
 }

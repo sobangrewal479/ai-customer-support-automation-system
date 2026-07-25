@@ -1,0 +1,284 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <meta
+        name="description"
+        content="Request human support from Harbor & Pine Living."
+    >
+
+    <title>Request Human Support | Harbor &amp; Pine Living</title>
+
+    <link
+        rel="stylesheet"
+        href="{% static 'css/site.css' %}"
+    >
+
+    <link
+        rel="stylesheet"
+        href="{% static 'css/chat.css' %}"
+    >
+</head>
+
+<body>
+    <header class="site-header">
+        <div class="header-inner">
+            <a
+                class="brand chat-brand-link"
+                href="/"
+            >
+                <span class="brand-mark">H&amp;P</span>
+
+                <span>
+                    <span class="brand-name">
+                        Harbor &amp; Pine
+                    </span>
+
+                    <span class="brand-subtitle">
+                        Living
+                    </span>
+                </span>
+            </a>
+
+            <p class="location">
+                Human Support
+            </p>
+        </div>
+    </header>
+
+    <main class="chat-page">
+        <section class="chat-layout">
+            <aside class="chat-information">
+                <p class="eyebrow">
+                    Human handoff
+                </p>
+
+                <h1>
+                    Request a support agent
+                </h1>
+
+                <p class="chat-description">
+                    Submit the issue and a contact method. The
+                    system will assign the request to the appropriate
+                    support queue and calculate its response target.
+                </p>
+
+                <div class="privacy-notice">
+                    <strong>
+                        Contact requirement
+                    </strong>
+
+                    <p>
+                        Provide at least one contact method:
+                        an email address or phone number.
+                        Do not include passwords, payment-card
+                        information, or government identification.
+                    </p>
+                </div>
+
+                <div class="support-boundaries">
+                    <h2>
+                        Human support is appropriate for:
+                    </h2>
+
+                    <ul>
+                        <li>Requests to speak with a person</li>
+                        <li>Complaints or unresolved issues</li>
+                        <li>Payment or refund disputes</li>
+                        <li>Safety, injury, or legal concerns</li>
+                        <li>Privacy and data requests</li>
+                        <li>Unsupported or uncertain questions</li>
+                    </ul>
+                </div>
+
+                <p class="response-target">
+                    Priority and response targets depend on the
+                    category selected. Response times are targets,
+                    not guarantees.
+                </p>
+            </aside>
+
+            <section
+                class="chat-shell"
+                aria-labelledby="handoff-form-heading"
+            >
+                <div class="chat-shell-header">
+                    <div>
+                        <p class="chat-status-label">
+                            Harbor &amp; Pine Support
+                        </p>
+
+                        <h2 id="handoff-form-heading">
+                            Human-support request
+                        </h2>
+                    </div>
+
+                    <span class="chat-status">
+                        <span class="status-dot"></span>
+                        Available
+                    </span>
+                </div>
+
+                <form
+                    class="chat-form"
+                    method="post"
+                    novalidate
+                >
+                    {% csrf_token %}
+
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div
+                                class="privacy-notice"
+                                role="status"
+                            >
+                                <strong>
+                                    Request created
+                                </strong>
+
+                                <p>
+                                    {{ message }}
+                                </p>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+
+                    {% if form.non_field_errors %}
+                        <div
+                            class="chat-error"
+                            role="alert"
+                        >
+                            {{ form.non_field_errors }}
+                        </div>
+                    {% endif %}
+
+                    <label
+                        class="chat-input-label"
+                        for="{{ form.contact_name.id_for_label }}"
+                    >
+                        {{ form.contact_name.label }}
+                    </label>
+
+                    {{ form.contact_name }}
+
+                    {% if form.contact_name.errors %}
+                        <div
+                            class="chat-error"
+                            role="alert"
+                        >
+                            {{ form.contact_name.errors }}
+                        </div>
+                    {% endif %}
+
+                    <label
+                        class="chat-input-label"
+                        for="{{ form.contact_email.id_for_label }}"
+                    >
+                        {{ form.contact_email.label }}
+                    </label>
+
+                    {{ form.contact_email }}
+
+                    {% if form.contact_email.errors %}
+                        <div
+                            class="chat-error"
+                            role="alert"
+                        >
+                            {{ form.contact_email.errors }}
+                        </div>
+                    {% endif %}
+
+                    <label
+                        class="chat-input-label"
+                        for="{{ form.contact_phone.id_for_label }}"
+                    >
+                        {{ form.contact_phone.label }}
+                    </label>
+
+                    {{ form.contact_phone }}
+
+                    {% if form.contact_phone.errors %}
+                        <div
+                            class="chat-error"
+                            role="alert"
+                        >
+                            {{ form.contact_phone.errors }}
+                        </div>
+                    {% endif %}
+
+                    <label
+                        class="chat-input-label"
+                        for="{{ form.category.id_for_label }}"
+                    >
+                        {{ form.category.label }}
+                    </label>
+
+                    {{ form.category }}
+
+                    {% if form.category.errors %}
+                        <div
+                            class="chat-error"
+                            role="alert"
+                        >
+                            {{ form.category.errors }}
+                        </div>
+                    {% endif %}
+
+                    <label
+                        class="chat-input-label"
+                        for="{{ form.reason.id_for_label }}"
+                    >
+                        {{ form.reason.label }}
+                    </label>
+
+                    {{ form.reason }}
+
+                    {% if form.reason.errors %}
+                        <div
+                            class="chat-error"
+                            role="alert"
+                        >
+                            {{ form.reason.errors }}
+                        </div>
+                    {% endif %}
+
+                    <div class="chat-form-footer">
+                        <a href="{% url 'support_chat:chat' %}">
+                            Return to support chat
+                        </a>
+
+                        <button type="submit">
+                            Request human support
+                        </button>
+                    </div>
+                </form>
+
+                <div class="chat-form">
+                    <p>
+                        Submitting a sales or partnership inquiry?
+                    </p>
+
+                    <a href="{% url 'crm_lite:lead_capture' %}">
+                        Open the customer inquiry form
+                    </a>
+                </div>
+            </section>
+        </section>
+    </main>
+
+    <footer class="site-footer">
+        <p>
+            Harbor &amp; Pine Living, Inc.
+            <span>Fictional portfolio client</span>
+        </p>
+    </footer>
+</body>
+</html>
