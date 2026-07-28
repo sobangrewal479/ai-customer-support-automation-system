@@ -36,6 +36,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
         "core.apps.CoreConfig",
         "crm_lite.apps.CrmLiteConfig",
+        "dashboard.apps.DashboardConfig",
     "accounts.apps.AccountsConfig",
         "knowledge.apps.KnowledgeConfig",
         "catalog.apps.CatalogConfig",

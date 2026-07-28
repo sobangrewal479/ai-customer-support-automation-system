@@ -14,6 +14,10 @@ urlpatterns = [
         include("accounts.urls"),
     ),
     path(
+        "dashboard/",
+        include("dashboard.urls"),
+    ),
+    path(
         "contact/",
         include("crm_lite.urls"),
     ),

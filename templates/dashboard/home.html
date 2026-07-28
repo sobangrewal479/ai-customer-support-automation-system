@@ -1,0 +1,281 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <meta
+        name="description"
+        content="Harbor & Pine customer-support operations dashboard."
+    >
+
+    <title>
+        Support Dashboard | Harbor &amp; Pine Living
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="{% static 'css/site.css' %}"
+    >
+
+    <link
+        rel="stylesheet"
+        href="{% static 'css/dashboard.css' %}"
+    >
+</head>
+
+<body>
+    <header class="site-header">
+        <div class="header-inner">
+            <a
+                class="brand"
+                href="{% url 'dashboard:home' %}"
+            >
+                <span class="brand-mark">
+                    H&amp;P
+                </span>
+
+                <span>
+                    <span class="brand-name">
+                        Harbor &amp; Pine
+                    </span>
+
+                    <span class="brand-subtitle">
+                        Support Operations
+                    </span>
+                </span>
+            </a>
+
+            <p class="location">
+                Staff Dashboard
+            </p>
+        </div>
+    </header>
+
+    <main class="dashboard-main">
+        <section class="dashboard-hero">
+            <div class="dashboard-hero-content">
+                <p class="dashboard-eyebrow">
+                    Internal support workspace
+                </p>
+
+                <h1 class="dashboard-title">
+                    Harbor &amp; Pine Support Dashboard
+                </h1>
+
+                <p class="dashboard-description">
+                    Review customer conversations, unresolved
+                    questions, leads, human-support requests,
+                    secure order activity, and approved product
+                    records from one operational workspace.
+                </p>
+            </div>
+
+            <aside class="dashboard-user-card">
+                <p class="dashboard-user-label">
+                    Signed in as
+                </p>
+
+                <p class="dashboard-user-name">
+                    {{ request.user.username }}
+                </p>
+            </aside>
+        </section>
+
+        <section
+            class="dashboard-section"
+            aria-labelledby="dashboard-summary-heading"
+        >
+            <div class="dashboard-section-heading">
+                <div>
+                    <p class="dashboard-eyebrow">
+                        Current totals
+                    </p>
+
+                    <h2 id="dashboard-summary-heading">
+                        Operational summary
+                    </h2>
+                </div>
+
+                <p>
+                    Live totals from the current portfolio database.
+                </p>
+            </div>
+
+            <div class="dashboard-summary-grid">
+                <article class="dashboard-summary-card">
+                    <p>
+                        Chat sessions
+                    </p>
+
+                    <strong>
+                        {{ summary.chat_sessions }}
+                    </strong>
+                </article>
+
+                <article class="dashboard-summary-card">
+                    <p>
+                        Unanswered questions
+                    </p>
+
+                    <strong>
+                        {{ summary.unanswered_questions }}
+                    </strong>
+                </article>
+
+                <article class="dashboard-summary-card">
+                    <p>
+                        Leads
+                    </p>
+
+                    <strong>
+                        {{ summary.leads }}
+                    </strong>
+                </article>
+
+                <article class="dashboard-summary-card">
+                    <p>
+                        Human-support requests
+                    </p>
+
+                    <strong>
+                        {{ summary.handoff_requests }}
+                    </strong>
+                </article>
+
+                <article class="dashboard-summary-card">
+                    <p>
+                        Order lookup attempts
+                    </p>
+
+                    <strong>
+                        {{ summary.order_lookup_attempts }}
+                    </strong>
+                </article>
+
+                <article class="dashboard-summary-card">
+                    <p>
+                        Approved products
+                    </p>
+
+                    <strong>
+                        {{ summary.products }}
+                    </strong>
+                </article>
+            </div>
+        </section>
+
+        <section
+            class="dashboard-section"
+            aria-labelledby="dashboard-sections-heading"
+        >
+            <div class="dashboard-section-heading">
+                <div>
+                    <p class="dashboard-eyebrow">
+                        Staff workspace
+                    </p>
+
+                    <h2 id="dashboard-sections-heading">
+                        Operational areas
+                    </h2>
+                </div>
+
+                <p>
+                    Each area will become a dedicated staff page
+                    with filters, record details, and workflow
+                    controls.
+                </p>
+            </div>
+
+            <div class="dashboard-area-grid">
+                <article class="dashboard-area-card">
+                    <h3>
+                        Customer conversations
+                    </h3>
+
+                    <p>
+                        Review chat sessions, customer messages,
+                        assistant responses, evidence sources,
+                        detected intent, and resolution paths.
+                    </p>
+                </article>
+
+                <article class="dashboard-area-card">
+                    <h3>
+                        Unanswered questions
+                    </h3>
+
+                    <p>
+                        Review unsupported questions, occurrence
+                        counts, review statuses, internal notes,
+                        and FAQ-conversion progress.
+                    </p>
+                </article>
+
+                <article class="dashboard-area-card">
+                    <h3>
+                        Leads
+                    </h3>
+
+                    <p>
+                        Review product, bulk-order, trade-program,
+                        partnership, and other customer sales
+                        inquiries.
+                    </p>
+                </article>
+
+                <article class="dashboard-area-card">
+                    <h3>
+                        Human-support requests
+                    </h3>
+
+                    <p>
+                        Review queue ownership, priority, SLA
+                        deadlines, support categories, and workflow
+                        status.
+                    </p>
+                </article>
+
+                <article class="dashboard-area-card">
+                    <h3>
+                        Order activity
+                    </h3>
+
+                    <p>
+                        Review successful order lookups, failed
+                        verification attempts, blocked attempts,
+                        and verification outcomes.
+                    </p>
+                </article>
+
+                <article class="dashboard-area-card">
+                    <h3>
+                        Product catalogue
+                    </h3>
+
+                    <p>
+                        Review approved product records used by the
+                        customer-support response system.
+                    </p>
+                </article>
+            </div>
+        </section>
+    </main>
+
+    <footer class="site-footer">
+        <p>
+            Harbor &amp; Pine Living, Inc.
+
+            <span>
+                Internal staff workspace
+            </span>
+        </p>
+    </footer>
+</body>
+</html>
