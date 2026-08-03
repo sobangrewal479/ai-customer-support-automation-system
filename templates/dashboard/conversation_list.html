@@ -1,0 +1,193 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <meta
+        name="description"
+        content="Harbor & Pine customer conversation review workspace."
+    >
+
+    <title>
+        Customer Conversations | Harbor &amp; Pine
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="{% static 'css/site.css' %}"
+    >
+
+    <link
+        rel="stylesheet"
+        href="{% static 'css/dashboard.css' %}"
+    >
+</head>
+
+<body>
+    <header class="site-header">
+        <div class="header-inner">
+            <a
+                class="brand"
+                href="{% url 'dashboard:home' %}"
+            >
+                <span class="brand-mark">
+                    H&amp;P
+                </span>
+
+                <span>
+                    <span class="brand-name">
+                        Harbor &amp; Pine
+                    </span>
+
+                    <span class="brand-subtitle">
+                        Support Operations
+                    </span>
+                </span>
+            </a>
+
+            <p class="location">
+                Customer Conversations
+            </p>
+        </div>
+    </header>
+
+    <main class="dashboard-main">
+        <section class="dashboard-hero">
+            <div class="dashboard-hero-content">
+                <p class="dashboard-eyebrow">
+                    Conversation review
+                </p>
+
+                <h1 class="dashboard-title">
+                    Customer conversations
+                </h1>
+
+                <p class="dashboard-description">
+                    Review stored customer-support sessions,
+                    message totals, privacy acknowledgement, and
+                    final resolution paths.
+                </p>
+            </div>
+
+            <aside class="dashboard-user-card">
+                <p class="dashboard-user-label">
+                    Signed in as
+                </p>
+
+                <p class="dashboard-user-name">
+                    {{ request.user.username }}
+                </p>
+            </aside>
+        </section>
+
+        <section
+            class="dashboard-section"
+            aria-labelledby="conversation-queue-heading"
+        >
+            <div class="dashboard-section-heading">
+                <div>
+                    <p class="dashboard-eyebrow">
+                        Support records
+                    </p>
+
+                    <h2 id="conversation-queue-heading">
+                        Conversation queue
+                    </h2>
+                </div>
+
+                <p>{{ conversations|length }} stored conversation{{ conversations|length|pluralize }} available for staff review.</p>
+            </div>
+
+            {% if conversations %}
+                <div class="dashboard-area-grid">
+                    {% for conversation in conversations %}
+                        <article class="dashboard-area-card">
+                            <p class="dashboard-eyebrow">
+                                Chat session
+                            </p>
+
+                            <h3>
+                                Session {{ conversation.pk }}
+                            </h3>
+
+                            <p>
+                                <strong>
+                                    Created:
+                                </strong>
+
+                                {{ conversation.started_at|date:"d M Y, H:i"|default:"Not recorded" }}
+                            </p>
+
+                            <p>
+                                <strong>
+                                    Messages:
+                                </strong>
+
+                                {{ conversation.messages.count }}
+                            </p>
+
+                            <p>
+                                <strong>
+                                    Privacy acknowledged:
+                                </strong>
+
+                                {{ conversation.privacy_acknowledged|yesno:"Yes,No" }}
+                            </p>
+
+                            <p>
+                                <strong>
+                                    Resolution path:
+                                </strong>
+
+                                {{ conversation.get_resolution_path_display|default:"Not resolved" }}
+                            </p>
+
+                            <p>
+                                <a
+                                    href="{% url 'dashboard:conversation_detail' conversation.pk %}"
+                                >
+                                    Review conversation details
+                                </a>
+                            </p>
+                        </article>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <article class="dashboard-area-card">
+                    <h3>
+                        No customer conversations found
+                    </h3>
+
+                    <p>
+                        Stored chat sessions will appear here after
+                        customers use the support chatbot.
+                    </p>
+                </article>
+            {% endif %}
+        </section>
+
+        <section class="dashboard-section">
+            <a href="{% url 'dashboard:home' %}">
+                Return to dashboard
+            </a>
+        </section>
+    </main>
+
+    <footer class="site-footer">
+        <p>
+            Harbor &amp; Pine Living, Inc.
+
+            <span>
+                Internal staff workspace
+            </span>
+        </p>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,493 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <meta
+        name="description"
+        content="Harbor & Pine customer conversation details."
+    >
+
+    <title>
+        Conversation Details | Harbor &amp; Pine
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="{% static 'css/site.css' %}"
+    >
+
+    <link
+        rel="stylesheet"
+        href="{% static 'css/dashboard.css' %}"
+    >
+</head>
+
+<body>
+    <header class="site-header">
+        <div class="header-inner">
+            <a
+                class="brand"
+                href="{% url 'dashboard:home' %}"
+            >
+                <span class="brand-mark">
+                    H&amp;P
+                </span>
+
+                <span>
+                    <span class="brand-name">
+                        Harbor &amp; Pine
+                    </span>
+
+                    <span class="brand-subtitle">
+                        Support Operations
+                    </span>
+                </span>
+            </a>
+
+            <p class="location">
+                Conversation Details
+            </p>
+        </div>
+    </header>
+
+    <main class="dashboard-main">
+        <section class="dashboard-hero">
+            <div class="dashboard-hero-content">
+                <p class="dashboard-eyebrow">
+                    Conversation review
+                </p>
+
+                <h1 class="dashboard-title">
+                    Conversation details
+                </h1>
+
+                <p class="dashboard-description">
+                    Review the complete stored transcript,
+                    operational metadata, and customer records
+                    linked to this support session.
+                </p>
+            </div>
+
+            <aside class="dashboard-user-card">
+                <p class="dashboard-user-label">
+                    Signed in as
+                </p>
+
+                <p class="dashboard-user-name">
+                    {{ request.user.username }}
+                </p>
+            </aside>
+        </section>
+
+        <section
+            class="dashboard-section"
+            aria-labelledby="session-summary-heading"
+        >
+            <div class="dashboard-section-heading">
+                <div>
+                    <p class="dashboard-eyebrow">
+                        Session information
+                    </p>
+
+                    <h2 id="session-summary-heading">
+                        Session summary
+                    </h2>
+                </div>
+
+                <p>
+                    Reference ID:
+                    {{ conversation.pk }}
+                </p>
+            </div>
+
+            <div class="dashboard-summary-grid">
+                <article class="dashboard-summary-card">
+                    <p>
+                        Started
+                    </p>
+
+                    <strong class="dashboard-detail-value">
+                        {{ conversation.started_at|date:"d M Y, H:i"|default:"Not recorded" }}
+                    </strong>
+                </article>
+
+                <article class="dashboard-summary-card">
+                    <p>
+                        Messages
+                    </p>
+
+                    <strong>
+                        {{ conversation.messages.count }}
+                    </strong>
+                </article>
+
+                <article class="dashboard-summary-card">
+                    <p>
+                        Privacy acknowledged
+                    </p>
+
+                    <strong class="dashboard-detail-value">
+                        {{ conversation.privacy_acknowledged|yesno:"Yes,No" }}
+                    </strong>
+                </article>
+
+                <article class="dashboard-summary-card">
+                    <p>
+                        Resolution path
+                    </p>
+
+                    <strong class="dashboard-detail-value">
+                        {{ conversation.get_resolution_path_display|default:"Not resolved" }}
+                    </strong>
+                </article>
+            </div>
+        </section>
+
+        <section
+            class="dashboard-section"
+            aria-labelledby="linked-contact-heading"
+        >
+            <div class="dashboard-section-heading">
+                <div>
+                    <p class="dashboard-eyebrow">
+                        Customer identification
+                    </p>
+
+                    <h2 id="linked-contact-heading">
+                        Linked customer/contact details
+                    </h2>
+                </div>
+
+                <p>
+                    Contact information is shown only when the
+                    customer submitted a lead or human-support request.
+                </p>
+            </div>
+
+            {% if has_linked_contact %}
+                {% if linked_leads %}
+                    <div class="dashboard-conversation-list">
+                        {% for lead in linked_leads %}
+                            <article class="dashboard-area-card">
+                                <p class="dashboard-eyebrow">
+                                    Lead record
+                                </p>
+
+                                <h3>
+                                    {{ lead.name|default:"Unnamed customer" }}
+                                </h3>
+
+                                <p>
+                                    <strong>
+                                        Email:
+                                    </strong>
+
+                                    {{ lead.email|default:"Not provided" }}
+                                </p>
+
+                                <p>
+                                    <strong>
+                                        Phone:
+                                    </strong>
+
+                                    {{ lead.phone|default:"Not provided" }}
+                                </p>
+
+                                <p>
+                                    <strong>
+                                        Company:
+                                    </strong>
+
+                                    {{ lead.company|default:"Not provided" }}
+                                </p>
+
+                                <p>
+                                    <strong>
+                                        Inquiry type:
+                                    </strong>
+
+                                    {{ lead.get_inquiry_type_display|default:"Not recorded" }}
+                                </p>
+
+                                <p>
+                                    <strong>
+                                        Product SKU:
+                                    </strong>
+
+                                    {{ lead.product_sku|default:"Not provided" }}
+                                </p>
+
+                                <p>
+                                    <strong>
+                                        Status:
+                                    </strong>
+
+                                    {{ lead.get_status_display|default:"Not recorded" }}
+                                </p>
+
+                                <p>
+                                    <strong>
+                                        Owner:
+                                    </strong>
+
+                                    {{ lead.owner|default:"Not assigned" }}
+                                </p>
+
+                                <p>
+                                    <strong>
+                                        Contact consent:
+                                    </strong>
+
+                                    {{ lead.consent_to_contact|yesno:"Yes,No" }}
+                                </p>
+
+                                <p>
+                                    <strong>
+                                        Customer inquiry:
+                                    </strong>
+                                </p>
+
+                                <p>
+                                    {{ lead.message|default:"No inquiry message recorded." }}
+                                </p>
+
+                                <p>
+                                    <strong>
+                                        Internal notes:
+                                    </strong>
+                                </p>
+
+                                <p>
+                                    {{ lead.internal_notes|default:"No internal notes." }}
+                                </p>
+
+                                <p>
+                                    <strong>
+                                        Submitted:
+                                    </strong>
+
+                                    {{ lead.created_at|date:"d M Y, H:i"|default:"Not recorded" }}
+                                </p>
+                            </article>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+                {% if linked_handoff_requests %}
+                    <div class="dashboard-conversation-list">
+                        {% for handoff in linked_handoff_requests %}
+                            <article class="dashboard-area-card">
+                                <p class="dashboard-eyebrow">
+                                    Human-support request
+                                </p>
+
+                                <h3>
+                                    {{ handoff.contact_name|default:"Unnamed customer" }}
+                                </h3>
+
+                                <p>
+                                    <strong>
+                                        Email:
+                                    </strong>
+
+                                    {{ handoff.contact_email|default:"Not provided" }}
+                                </p>
+
+                                <p>
+                                    <strong>
+                                        Phone:
+                                    </strong>
+
+                                    {{ handoff.contact_phone|default:"Not provided" }}
+                                </p>
+
+                                <p>
+                                    <strong>
+                                        Request category:
+                                    </strong>
+
+                                    {{ handoff.get_category_display|default:"Not recorded" }}
+                                </p>
+
+                                <p>
+                                    <strong>
+                                        Priority:
+                                    </strong>
+
+                                    {{ handoff.get_priority_display|default:"Not recorded" }}
+                                </p>
+
+                                <p>
+                                    <strong>
+                                        Status:
+                                    </strong>
+
+                                    {{ handoff.get_status_display|default:"Not recorded" }}
+                                </p>
+
+                                <p>
+                                    <strong>
+                                        Assigned owner:
+                                    </strong>
+
+                                    {{ handoff.assigned_owner|default:"Not assigned" }}
+                                </p>
+
+                                <p>
+                                    <strong>
+                                        SLA due:
+                                    </strong>
+
+                                    {{ handoff.sla_due_at|date:"d M Y, H:i"|default:"Not recorded" }}
+                                </p>
+
+                                <p>
+                                    <strong>
+                                        Support reason:
+                                    </strong>
+                                </p>
+
+                                <p>
+                                    {{ handoff.reason|default:"No reason recorded." }}
+                                </p>
+
+                                <p>
+                                    <strong>
+                                        Internal notes:
+                                    </strong>
+                                </p>
+
+                                <p>
+                                    {{ handoff.notes|default:"No internal notes." }}
+                                </p>
+
+                                <p>
+                                    <strong>
+                                        Submitted:
+                                    </strong>
+
+                                    {{ handoff.created_at|date:"d M Y, H:i"|default:"Not recorded" }}
+                                </p>
+                            </article>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% else %}
+                <article class="dashboard-area-card">
+                    <h3>
+                        Anonymous conversation
+                    </h3>
+
+                    <p>No lead-capture submission or human-support request is linked to this conversation.</p>
+
+                    <p>
+                        The visitor’s name, email address, and phone
+                        number are therefore not available.
+                    </p>
+                </article>
+            {% endif %}
+        </section>
+
+        <section
+            class="dashboard-section"
+            aria-labelledby="conversation-transcript-heading"
+        >
+            <div class="dashboard-section-heading">
+                <div>
+                    <p class="dashboard-eyebrow">
+                        Stored messages
+                    </p>
+
+                    <h2 id="conversation-transcript-heading">
+                        Conversation transcript
+                    </h2>
+                </div>
+
+                <p>
+                    Messages are shown in their stored chronological
+                    order.
+                </p>
+            </div>
+
+            {% if conversation.messages.all %}
+                <div class="dashboard-conversation-list">
+                    {% for message in conversation.messages.all %}
+                        <article class="dashboard-area-card">
+                            <p class="dashboard-eyebrow">
+                                {{ message.get_sender_type_display|default:message.sender_type }}
+                            </p>
+
+                            <h3>
+                                Message {{ forloop.counter }}
+                            </h3>
+
+                            <p>
+                                {{ message.message }}
+                            </p>
+
+                            <p>
+                                <strong>
+                                    Detected intent:
+                                </strong>
+
+                                {{ message.get_detected_intent_display|default:"Not recorded" }}
+                            </p>
+
+                            <p>
+                                <strong>
+                                    Resolution path:
+                                </strong>
+
+                                {{ message.get_resolution_path_display|default:"Not recorded" }}
+                            </p>
+
+                            <p>
+                                <strong>
+                                    Created:
+                                </strong>
+
+                                {{ message.created_at|date:"d M Y, H:i"|default:"Not recorded" }}
+                            </p>
+                        </article>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <article class="dashboard-area-card">
+                    <h3>
+                        No stored messages
+                    </h3>
+
+                    <p>
+                        This session does not currently contain any
+                        customer or assistant messages.
+                    </p>
+                </article>
+            {% endif %}
+        </section>
+
+        <section class="dashboard-section">
+            <a href="{% url 'dashboard:conversation_list' %}">
+                Return to customer conversations
+            </a>
+        </section>
+    </main>
+
+    <footer class="site-footer">
+        <p>
+            Harbor &amp; Pine Living, Inc.
+
+            <span>
+                Internal staff workspace
+            </span>
+        </p>
+    </footer>
+</body>
+</html>

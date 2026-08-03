@@ -22,3 +22,30 @@ def get_dashboard_summary():
         ),
         "products": Product.objects.count(),
     }
+
+
+def get_conversation_records():
+    return (
+        ChatSession.objects
+        .prefetch_related("messages")
+        .all()
+    )
+
+
+def get_conversation_contact_records(conversation):
+    linked_leads = Lead.objects.filter(
+        source_session=conversation,
+    )
+
+    linked_handoff_requests = HandoffRequest.objects.filter(
+        session=conversation,
+    )
+
+    return {
+        "linked_leads": linked_leads,
+        "linked_handoff_requests": linked_handoff_requests,
+        "has_linked_contact": (
+            linked_leads.exists()
+            or linked_handoff_requests.exists()
+        ),
+    }
