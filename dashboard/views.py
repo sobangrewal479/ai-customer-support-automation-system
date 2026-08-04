@@ -5,6 +5,7 @@ from dashboard.services import (
     get_conversation_contact_records,
     get_conversation_records,
     get_dashboard_summary,
+    get_unanswered_question_records,
 )
 from support_chat.models import ChatSession
 
@@ -62,5 +63,20 @@ def conversation_detail(request, session_id):
             "has_linked_contact": contact_records[
                 "has_linked_contact"
             ],
+        },
+    )
+
+
+@login_required
+def unanswered_question_list(request):
+    unanswered_questions = (
+        get_unanswered_question_records()
+    )
+
+    return render(
+        request,
+        "dashboard/unanswered_question_list.html",
+        {
+            "unanswered_questions": unanswered_questions,
         },
     )

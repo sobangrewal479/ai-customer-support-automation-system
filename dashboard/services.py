@@ -49,3 +49,14 @@ def get_conversation_contact_records(conversation):
             or linked_handoff_requests.exists()
         ),
     }
+
+
+def get_unanswered_question_records():
+    return (
+        UnansweredQuestion.objects
+        .select_related(
+            "session",
+            "converted_faq",
+        )
+        .all()
+    )

@@ -8,8 +8,12 @@ from dashboard.services import (
     get_conversation_contact_records,
     get_conversation_records,
     get_dashboard_summary,
+    get_unanswered_question_records,
 )
-from support_chat.models import ChatSession
+from support_chat.models import (
+    ChatSession,
+    UnansweredQuestion,
+)
 
 
 class DashboardSummaryServiceTests(TestCase):
@@ -297,4 +301,68 @@ class ConversationContactRecordServiceTests(TestCase):
                 "linked_handoff_requests"
             ].count(),
             0,
+        )
+
+
+class UnansweredQuestionRecordServiceTests(TestCase):
+    def test_empty_database_returns_no_unanswered_questions(
+        self,
+    ):
+        unanswered_questions = (
+            get_unanswered_question_records()
+        )
+
+        self.assertEqual(
+            unanswered_questions.count(),
+            0,
+        )
+
+    def test_service_returns_stored_unanswered_questions(
+        self,
+    ):
+        session = ChatSession.objects.create(
+            privacy_acknowledged=True,
+        )
+
+        first_question = UnansweredQuestion.objects.create(
+            question="Does this shelf safely hold 80 pounds?",
+            normalized_topic=(
+                "does this shelf safely hold 80 pounds"
+            ),
+            session=session,
+            occurrence_count=1,
+        )
+
+        repeated_question = UnansweredQuestion.objects.create(
+            question="Can this organizer be used outdoors?",
+            normalized_topic=(
+                "can this organizer be used outdoors"
+            ),
+            occurrence_count=3,
+            status=UnansweredQuestion.Status.REVIEWING,
+            review_notes="Confirm outdoor-use guidance.",
+        )
+
+        unanswered_questions = (
+            get_unanswered_question_records()
+        )
+
+        self.assertEqual(
+            unanswered_questions.count(),
+            2,
+        )
+
+        self.assertEqual(
+            unanswered_questions.first(),
+            repeated_question,
+        )
+
+        self.assertIn(
+            first_question,
+            unanswered_questions,
+        )
+
+        self.assertEqual(
+            repeated_question.get_status_display(),
+            "Reviewing",
         )

@@ -21,4 +21,9 @@ urlpatterns = [
         views.conversation_detail,
         name="conversation_detail",
     ),
+    path(
+        "unanswered-questions/",
+        views.unanswered_question_list,
+        name="unanswered_question_list",
+    ),
 ]

@@ -1,0 +1,227 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <meta
+        name="description"
+        content="Harbor & Pine unanswered customer-question review workspace."
+    >
+
+    <title>
+        Unanswered Questions | Harbor &amp; Pine
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="{% static 'css/site.css' %}"
+    >
+
+    <link
+        rel="stylesheet"
+        href="{% static 'css/dashboard.css' %}"
+    >
+</head>
+
+<body>
+    <header class="site-header">
+        <div class="header-inner">
+            <a
+                class="brand"
+                href="{% url 'dashboard:home' %}"
+            >
+                <span class="brand-mark">
+                    H&amp;P
+                </span>
+
+                <span>
+                    <span class="brand-name">
+                        Harbor &amp; Pine
+                    </span>
+
+                    <span class="brand-subtitle">
+                        Support Operations
+                    </span>
+                </span>
+            </a>
+
+            <p class="location">
+                Unanswered Questions
+            </p>
+        </div>
+    </header>
+
+    <main class="dashboard-main">
+        <section class="dashboard-hero">
+            <div class="dashboard-hero-content">
+                <p class="dashboard-eyebrow">
+                    Knowledge-gap review
+                </p>
+
+                <h1 class="dashboard-title">
+                    Unanswered questions
+                </h1>
+
+                <p class="dashboard-description">
+                    Review unsupported customer questions,
+                    repeated topics, review status, internal notes,
+                    linked conversations, and FAQ-conversion
+                    progress.
+                </p>
+            </div>
+
+            <aside class="dashboard-user-card">
+                <p class="dashboard-user-label">
+                    Signed in as
+                </p>
+
+                <p class="dashboard-user-name">
+                    {{ request.user.username }}
+                </p>
+            </aside>
+        </section>
+
+        <section
+            class="dashboard-section"
+            aria-labelledby="unanswered-queue-heading"
+        >
+            <div class="dashboard-section-heading">
+                <div>
+                    <p class="dashboard-eyebrow">
+                        Support records
+                    </p>
+
+                    <h2 id="unanswered-queue-heading">
+                        Unanswered-question queue
+                    </h2>
+                </div>
+
+                <p>
+                    {{ unanswered_questions|length }}
+                    unanswered question{{ unanswered_questions|length|pluralize }}
+                    available for staff review.
+                </p>
+            </div>
+
+            {% if unanswered_questions %}
+                <div class="dashboard-area-grid">
+                    {% for unanswered_question in unanswered_questions %}
+                        <article class="dashboard-area-card">
+                            <p class="dashboard-eyebrow">
+                                {{ unanswered_question.get_status_display }}
+                            </p>
+
+                            <h3>
+                                {{ unanswered_question.normalized_topic }}
+                            </h3>
+
+                            <p>
+                                <strong>
+                                    Customer question:
+                                </strong>
+
+                                {{ unanswered_question.question }}
+                            </p>
+
+                            <p>
+                                <strong>
+                                    Occurrences:
+                                </strong>
+
+                                {{ unanswered_question.occurrence_count }}
+                            </p>
+
+                            <p>
+                                <strong>
+                                    First seen:
+                                </strong>
+
+                                {{ unanswered_question.first_seen_at|date:"d M Y, H:i"|default:"Not recorded" }}
+                            </p>
+
+                            <p>
+                                <strong>
+                                    Last seen:
+                                </strong>
+
+                                {{ unanswered_question.last_seen_at|date:"d M Y, H:i"|default:"Not recorded" }}
+                            </p>
+
+                            <p>
+                                <strong>
+                                    Review notes:
+                                </strong>
+
+                                {{ unanswered_question.review_notes|default:"No review notes added." }}
+                            </p>
+
+                            <p>
+                                <strong>
+                                    Converted FAQ:
+                                </strong>
+
+                                {% if unanswered_question.converted_faq %}
+                                    {{ unanswered_question.converted_faq.question }}
+                                {% else %}
+                                    Not converted
+                                {% endif %}
+                            </p>
+
+                            <p>
+                                <strong>
+                                    Linked conversation:
+                                </strong>
+
+                                {% if unanswered_question.session %}
+                                    <a
+                                        href="{% url 'dashboard:conversation_detail' unanswered_question.session.pk %}"
+                                    >
+                                        Review conversation
+                                    </a>
+                                {% else %}
+                                    No conversation linked
+                                {% endif %}
+                            </p>
+                        </article>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <article class="dashboard-area-card">
+                    <h3>
+                        No unanswered questions found
+                    </h3>
+
+                    <p>
+                        Unsupported customer questions will appear
+                        here after the chatbot records a knowledge
+                        gap or safe fallback.
+                    </p>
+                </article>
+            {% endif %}
+        </section>
+
+        <section class="dashboard-section">
+            <a href="{% url 'dashboard:home' %}">
+                Return to dashboard
+            </a>
+        </section>
+    </main>
+
+    <footer class="site-footer">
+        <p>
+            Harbor &amp; Pine Living, Inc.
+
+            <span>
+                Internal staff workspace
+            </span>
+        </p>
+    </footer>
+</body>
+</html>

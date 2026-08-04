@@ -7,7 +7,11 @@ from django.urls import reverse
 from django.utils import timezone
 
 from crm_lite.models import HandoffRequest, Lead
-from support_chat.models import ChatMessage, ChatSession
+from support_chat.models import (
+    ChatMessage,
+    ChatSession,
+    UnansweredQuestion,
+)
 
 
 User = get_user_model()
@@ -710,4 +714,206 @@ class DashboardAuthenticationTests(TestCase):
         self.assertEqual(
             response.status_code,
             404,
+        )
+
+
+class DashboardUnansweredQuestionTests(TestCase):
+    def setUp(self):
+        self.unanswered_question_url = reverse(
+            "dashboard:unanswered_question_list"
+        )
+
+        self.staff_user = User.objects.create_user(
+            username="knowledge-reviewer",
+            email="reviewer@example.com",
+            password="ReviewerPass123!",
+            is_staff=True,
+        )
+
+    def test_unanswered_question_list_uses_expected_url(
+        self,
+    ):
+        self.assertEqual(
+            self.unanswered_question_url,
+            "/dashboard/unanswered-questions/",
+        )
+
+    def test_logged_out_user_cannot_access_unanswered_questions(
+        self,
+    ):
+        response = self.client.get(
+            self.unanswered_question_url
+        )
+
+        self.assertRedirects(
+            response,
+            (
+                "/staff/login/"
+                "?next=/dashboard/unanswered-questions/"
+            ),
+            fetch_redirect_response=False,
+        )
+
+    def test_authenticated_staff_user_can_access_page(
+        self,
+    ):
+        self.client.force_login(
+            self.staff_user
+        )
+
+        response = self.client.get(
+            self.unanswered_question_url
+        )
+
+        self.assertEqual(
+            response.status_code,
+            200,
+        )
+
+        self.assertTemplateUsed(
+            response,
+            "dashboard/unanswered_question_list.html",
+        )
+
+        self.assertContains(
+            response,
+            "Unanswered questions",
+        )
+
+        self.assertContains(
+            response,
+            "Unanswered-question queue",
+        )
+
+        self.assertContains(
+            response,
+            "knowledge-reviewer",
+        )
+
+    def test_empty_page_displays_expected_message(
+        self,
+    ):
+        self.client.force_login(
+            self.staff_user
+        )
+
+        response = self.client.get(
+            self.unanswered_question_url
+        )
+
+        self.assertEqual(
+            response.status_code,
+            200,
+        )
+
+        self.assertContains(
+            response,
+            "No unanswered questions found",
+        )
+
+        self.assertEqual(
+            response.context[
+                "unanswered_questions"
+            ].count(),
+            0,
+        )
+
+    def test_page_displays_stored_unanswered_question(
+        self,
+    ):
+        session = ChatSession.objects.create(
+            privacy_acknowledged=True,
+        )
+
+        unanswered_question = (
+            UnansweredQuestion.objects.create(
+                question=(
+                    "Can this organizer be used outdoors?"
+                ),
+                normalized_topic=(
+                    "can this organizer be used outdoors"
+                ),
+                session=session,
+                occurrence_count=3,
+                status=(
+                    UnansweredQuestion.Status.REVIEWING
+                ),
+                review_notes=(
+                    "Confirm approved outdoor-use guidance."
+                ),
+            )
+        )
+
+        conversation_detail_url = reverse(
+            "dashboard:conversation_detail",
+            kwargs={
+                "session_id": session.pk,
+            },
+        )
+
+        self.client.force_login(
+            self.staff_user
+        )
+
+        response = self.client.get(
+            self.unanswered_question_url
+        )
+
+        self.assertEqual(
+            response.status_code,
+            200,
+        )
+
+        self.assertEqual(
+            response.context[
+                "unanswered_questions"
+            ].count(),
+            1,
+        )
+
+        self.assertEqual(
+            response.context[
+                "unanswered_questions"
+            ].first(),
+            unanswered_question,
+        )
+
+        self.assertContains(
+            response,
+            "can this organizer be used outdoors",
+        )
+
+        self.assertContains(
+            response,
+            "Can this organizer be used outdoors?",
+        )
+
+        self.assertContains(
+            response,
+            "Reviewing",
+        )
+
+        self.assertContains(
+            response,
+            "Confirm approved outdoor-use guidance.",
+        )
+
+        self.assertContains(
+            response,
+            "Occurrences:",
+        )
+
+        self.assertContains(
+            response,
+            "3",
+        )
+
+        self.assertContains(
+            response,
+            f'href="{conversation_detail_url}"',
+        )
+
+        self.assertContains(
+            response,
+            "Review conversation",
         )
