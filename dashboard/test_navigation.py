@@ -59,10 +59,30 @@ class DashboardNavigationTests(TestCase):
             "Open unanswered questions",
         )
 
-    def test_both_dashboard_links_open_successfully(self):
+    def test_dashboard_links_to_lead_queue(self):
+        response = self.client.get(
+            reverse("dashboard:home")
+        )
+
+        lead_url = reverse(
+            "dashboard:lead_list"
+        )
+
+        self.assertContains(
+            response,
+            f'href="{lead_url}"',
+        )
+
+        self.assertContains(
+            response,
+            "Open customer leads",
+        )
+
+    def test_dashboard_links_open_successfully(self):
         page_names = (
             "dashboard:conversation_list",
             "dashboard:unanswered_question_list",
+            "dashboard:lead_list",
         )
 
         for page_name in page_names:

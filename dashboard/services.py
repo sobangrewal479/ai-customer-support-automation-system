@@ -60,3 +60,11 @@ def get_unanswered_question_records():
         )
         .all()
     )
+
+
+def get_lead_records():
+    return (
+        Lead.objects
+        .select_related("source_session")
+        .all()
+    )

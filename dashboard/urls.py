@@ -26,4 +26,9 @@ urlpatterns = [
         views.unanswered_question_list,
         name="unanswered_question_list",
     ),
+    path(
+        "leads/",
+        views.lead_list,
+        name="lead_list",
+    ),
 ]
