@@ -5,6 +5,7 @@ from dashboard.services import (
     get_conversation_contact_records,
     get_conversation_records,
     get_dashboard_summary,
+    get_handoff_request_records,
     get_lead_records,
     get_unanswered_question_records,
 )
@@ -92,5 +93,20 @@ def lead_list(request):
         "dashboard/lead_list.html",
         {
             "leads": leads,
+        },
+    )
+
+
+@login_required
+def handoff_request_list(request):
+    handoff_requests = (
+        get_handoff_request_records()
+    )
+
+    return render(
+        request,
+        "dashboard/handoff_request_list.html",
+        {
+            "handoff_requests": handoff_requests,
         },
     )

@@ -31,4 +31,9 @@ urlpatterns = [
         views.lead_list,
         name="lead_list",
     ),
+    path(
+        "human-support-requests/",
+        views.handoff_request_list,
+        name="handoff_request_list",
+    ),
 ]

@@ -78,11 +78,31 @@ class DashboardNavigationTests(TestCase):
             "Open customer leads",
         )
 
+    def test_dashboard_links_to_handoff_queue(self):
+        response = self.client.get(
+            reverse("dashboard:home")
+        )
+
+        handoff_url = reverse(
+            "dashboard:handoff_request_list"
+        )
+
+        self.assertContains(
+            response,
+            f'href="{handoff_url}"',
+        )
+
+        self.assertContains(
+            response,
+            "Open human-support requests",
+        )
+
     def test_dashboard_links_open_successfully(self):
         page_names = (
             "dashboard:conversation_list",
             "dashboard:unanswered_question_list",
             "dashboard:lead_list",
+            "dashboard:handoff_request_list",
         )
 
         for page_name in page_names:

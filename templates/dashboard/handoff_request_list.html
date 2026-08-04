@@ -1,0 +1,257 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <meta
+        name="description"
+        content="Harbor & Pine human-support request review workspace."
+    >
+
+    <title>
+        Human-Support Requests | Harbor &amp; Pine
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="{% static 'css/site.css' %}"
+    >
+
+    <link
+        rel="stylesheet"
+        href="{% static 'css/dashboard.css' %}"
+    >
+</head>
+
+<body>
+    <header class="site-header">
+        <div class="header-inner">
+            <a
+                class="brand"
+                href="{% url 'dashboard:home' %}"
+            >
+                <span class="brand-mark">
+                    H&amp;P
+                </span>
+
+                <span>
+                    <span class="brand-name">
+                        Harbor &amp; Pine
+                    </span>
+
+                    <span class="brand-subtitle">
+                        Support Operations
+                    </span>
+                </span>
+            </a>
+
+            <p class="location">
+                Human-Support Requests
+            </p>
+        </div>
+    </header>
+
+    <main class="dashboard-main">
+        <section class="dashboard-hero">
+            <div class="dashboard-hero-content">
+                <p class="dashboard-eyebrow">
+                    Escalation queue
+                </p>
+
+                <h1 class="dashboard-title">
+                    Human-support requests
+                </h1>
+
+                <p class="dashboard-description">
+                    Review customer escalation requests,
+                    categories, priority, status, assigned owner,
+                    SLA deadlines, contact details, internal notes,
+                    and linked conversations.
+                </p>
+            </div>
+
+            <aside class="dashboard-user-card">
+                <p class="dashboard-user-label">
+                    Signed in as
+                </p>
+
+                <p class="dashboard-user-name">
+                    {{ request.user.username }}
+                </p>
+            </aside>
+        </section>
+
+        <section
+            class="dashboard-section"
+            aria-labelledby="handoff-queue-heading"
+        >
+            <div class="dashboard-section-heading">
+                <div>
+                    <p class="dashboard-eyebrow">
+                        CRM-lite records
+                    </p>
+
+                    <h2 id="handoff-queue-heading">
+                        Human-support queue
+                    </h2>
+                </div>
+
+                <p>
+                    {{ handoff_requests|length }}
+                    human-support
+                    request{{ handoff_requests|length|pluralize }}
+                    available for staff review.
+                </p>
+            </div>
+
+            {% if handoff_requests %}
+                <div class="dashboard-area-grid">
+                    {% for handoff_request in handoff_requests %}
+                        <article class="dashboard-area-card">
+                            <p class="dashboard-eyebrow">
+                                {{ handoff_request.get_priority_display }}
+                                priority
+                            </p>
+
+                            <h3>
+                                {{ handoff_request.get_category_display }}
+                            </h3>
+
+                            <p>
+                                <strong>
+                                    Status:
+                                </strong>
+
+                                {{ handoff_request.get_status_display }}
+                            </p>
+
+                            <p>
+                                <strong>
+                                    Customer name:
+                                </strong>
+
+                                {{ handoff_request.contact_name|default:"Not provided" }}
+                            </p>
+
+                            <p>
+                                <strong>
+                                    Email:
+                                </strong>
+
+                                {{ handoff_request.contact_email|default:"Not provided" }}
+                            </p>
+
+                            <p>
+                                <strong>
+                                    Phone:
+                                </strong>
+
+                                {{ handoff_request.contact_phone|default:"Not provided" }}
+                            </p>
+
+                            <p>
+                                <strong>
+                                    Reason:
+                                </strong>
+
+                                {{ handoff_request.reason }}
+                            </p>
+
+                            <p>
+                                <strong>
+                                    Assigned owner:
+                                </strong>
+
+                                {{ handoff_request.assigned_owner|default:"Support Queue" }}
+                            </p>
+
+                            <p>
+                                <strong>
+                                    SLA deadline:
+                                </strong>
+
+                                {{ handoff_request.sla_due_at|date:"d M Y, H:i"|default:"Not recorded" }}
+                            </p>
+
+                            <p>
+                                <strong>
+                                    Internal notes:
+                                </strong>
+
+                                {{ handoff_request.notes|default:"No internal notes added." }}
+                            </p>
+
+                            <p>
+                                <strong>
+                                    Created:
+                                </strong>
+
+                                {{ handoff_request.created_at|date:"d M Y, H:i"|default:"Not recorded" }}
+                            </p>
+
+                            <p>
+                                <strong>
+                                    Last updated:
+                                </strong>
+
+                                {{ handoff_request.updated_at|date:"d M Y, H:i"|default:"Not recorded" }}
+                            </p>
+
+                            <p>
+                                <strong>
+                                    Linked conversation:
+                                </strong>
+
+                                {% if handoff_request.session %}
+                                    <a
+                                        href="{% url 'dashboard:conversation_detail' handoff_request.session.pk %}"
+                                    >
+                                        Review conversation
+                                    </a>
+                                {% else %}
+                                    No conversation linked
+                                {% endif %}
+                            </p>
+                        </article>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <article class="dashboard-area-card">
+                    <h3>
+                        No human-support requests found
+                    </h3>
+
+                    <p>
+                        Customer escalations and human-support
+                        requests will appear here after the system
+                        creates a handoff record.
+                    </p>
+                </article>
+            {% endif %}
+        </section>
+
+        <section class="dashboard-section">
+            <a href="{% url 'dashboard:home' %}">
+                Return to dashboard
+            </a>
+        </section>
+    </main>
+
+    <footer class="site-footer">
+        <p>
+            Harbor &amp; Pine Living, Inc.
+
+            <span>
+                Internal staff workspace
+            </span>
+        </p>
+    </footer>
+</body>
+</html>

@@ -68,3 +68,11 @@ def get_lead_records():
         .select_related("source_session")
         .all()
     )
+
+
+def get_handoff_request_records():
+    return (
+        HandoffRequest.objects
+        .select_related("session")
+        .all()
+    )
