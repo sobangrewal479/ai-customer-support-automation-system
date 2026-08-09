@@ -76,3 +76,14 @@ def get_handoff_request_records():
         .select_related("session")
         .all()
     )
+
+
+def get_order_lookup_attempt_records():
+    return (
+        OrderLookupAttempt.objects
+        .select_related(
+            "session",
+            "matched_order",
+        )
+        .all()
+    )

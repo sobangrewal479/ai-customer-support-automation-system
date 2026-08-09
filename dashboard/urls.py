@@ -36,4 +36,9 @@ urlpatterns = [
         views.handoff_request_list,
         name="handoff_request_list",
     ),
+    path(
+        "order-activity/",
+        views.order_activity_list,
+        name="order_activity_list",
+    ),
 ]

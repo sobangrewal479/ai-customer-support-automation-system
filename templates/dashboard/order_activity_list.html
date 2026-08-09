@@ -1,0 +1,264 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <meta
+        name="description"
+        content="Harbor & Pine secure order lookup activity workspace."
+    >
+
+    <title>
+        Order Activity | Harbor &amp; Pine
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="{% static 'css/site.css' %}"
+    >
+
+    <link
+        rel="stylesheet"
+        href="{% static 'css/dashboard.css' %}"
+    >
+</head>
+
+<body>
+    <header class="site-header">
+        <div class="header-inner">
+            <a
+                class="brand"
+                href="{% url 'dashboard:home' %}"
+            >
+                <span class="brand-mark">
+                    H&amp;P
+                </span>
+
+                <span>
+                    <span class="brand-name">
+                        Harbor &amp; Pine
+                    </span>
+
+                    <span class="brand-subtitle">
+                        Support Operations
+                    </span>
+                </span>
+            </a>
+
+            <p class="location">
+                Order Activity
+            </p>
+        </div>
+    </header>
+
+    <main class="dashboard-main">
+        <section class="dashboard-hero">
+            <div class="dashboard-hero-content">
+                <p class="dashboard-eyebrow">
+                    Secure verification review
+                </p>
+
+                <h1 class="dashboard-title">
+                    Order activity
+                </h1>
+
+                <p class="dashboard-description">
+                    Review successful order verifications, failed
+                    attempts, billing-ZIP mismatches, missing
+                    verification data, blocked sessions, and
+                    approved operational order information.
+                </p>
+            </div>
+
+            <aside class="dashboard-user-card">
+                <p class="dashboard-user-label">
+                    Signed in as
+                </p>
+
+                <p class="dashboard-user-name">
+                    {{ request.user.username }}
+                </p>
+            </aside>
+        </section>
+
+        <section
+            class="dashboard-section"
+            aria-labelledby="order-activity-heading"
+        >
+            <div class="dashboard-section-heading">
+                <div>
+                    <p class="dashboard-eyebrow">
+                        Verification records
+                    </p>
+
+                    <h2 id="order-activity-heading">
+                        Order lookup activity
+                    </h2>
+                </div>
+
+                <p>
+                    {{ order_lookup_attempts|length }}
+                    lookup attempt{{ order_lookup_attempts|length|pluralize }}
+                    available for staff review.
+                </p>
+            </div>
+
+            {% if order_lookup_attempts %}
+                <div class="dashboard-area-grid">
+                    {% for attempt in order_lookup_attempts %}
+                        <article class="dashboard-area-card">
+                            <p class="dashboard-eyebrow">
+                                {{ attempt.get_outcome_display }}
+                            </p>
+
+                            <h3>
+                                {% if attempt.provided_order_id %}
+                                    {{ attempt.provided_order_id }}
+                                {% else %}
+                                    Missing order ID
+                                {% endif %}
+                            </h3>
+
+                            <p>
+                                <strong>
+                                    Verification outcome:
+                                </strong>
+
+                                {{ attempt.get_outcome_display }}
+                            </p>
+
+                            <p>
+                                <strong>
+                                    Attempt time:
+                                </strong>
+
+                                {{ attempt.created_at|date:"d M Y, H:i"|default:"Not recorded" }}
+                            </p>
+
+                            {% if attempt.matched_order %}
+                                <p>
+                                    <strong>
+                                        Matched order:
+                                    </strong>
+
+                                    {{ attempt.matched_order.order_id }}
+                                </p>
+
+                                <p>
+                                    <strong>
+                                        Order status:
+                                    </strong>
+
+                                    {{ attempt.matched_order.get_status_display }}
+                                </p>
+
+                                <p>
+                                    <strong>
+                                        Carrier:
+                                    </strong>
+
+                                    {{ attempt.matched_order.carrier|default:"Not available" }}
+                                </p>
+
+                                <p>
+                                    <strong>
+                                        Tracking reference:
+                                    </strong>
+
+                                    {{ attempt.matched_order.tracking_reference|default:"Not available" }}
+                                </p>
+
+                                <p>
+                                    <strong>
+                                        Estimated-arrival window:
+                                    </strong>
+
+                                    {{ attempt.matched_order.eta_window|default:"Not available" }}
+                                </p>
+
+                                <p>
+                                    <strong>
+                                        Order record last updated:
+                                    </strong>
+
+                                    {{ attempt.matched_order.last_updated|date:"d M Y"|default:"Not recorded" }}
+                                </p>
+                            {% else %}
+                                <p>
+                                    <strong>
+                                        Matched order:
+                                    </strong>
+
+                                    No verified order linked
+                                </p>
+                            {% endif %}
+
+                            {% if attempt.outcome == "blocked" %}
+                                <p>
+                                    <strong>
+                                        Security action:
+                                    </strong>
+
+                                    Further verification requires
+                                    human-support review.
+                                </p>
+                            {% endif %}
+
+                            <p>
+                                <strong>
+                                    Linked conversation:
+                                </strong>
+
+                                {% if attempt.session %}
+                                    <a
+                                        href="{% url 'dashboard:conversation_detail' attempt.session.pk %}"
+                                    >
+                                        Review conversation
+                                    </a>
+                                {% else %}
+                                    No conversation linked
+                                {% endif %}
+                            </p>
+                        </article>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <article class="dashboard-area-card">
+                    <h3>
+                        No order lookup activity found
+                    </h3>
+
+                    <p>
+                        Secure order-verification attempts will
+                        appear here after customers use the mock
+                        order lookup.
+                    </p>
+                </article>
+            {% endif %}
+        </section>
+
+        <section class="dashboard-section">
+            <a href="{% url 'dashboard:home' %}">
+                Return to dashboard
+            </a>
+        </section>
+    </main>
+
+    <footer class="site-footer">
+        <p>
+            Harbor &amp; Pine Living, Inc.
+
+            <span>
+                Internal staff workspace
+            </span>
+        </p>
+    </footer>
+</body>
+</html>

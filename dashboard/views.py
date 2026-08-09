@@ -7,6 +7,7 @@ from dashboard.services import (
     get_dashboard_summary,
     get_handoff_request_records,
     get_lead_records,
+    get_order_lookup_attempt_records,
     get_unanswered_question_records,
 )
 from support_chat.models import ChatSession
@@ -108,5 +109,22 @@ def handoff_request_list(request):
         "dashboard/handoff_request_list.html",
         {
             "handoff_requests": handoff_requests,
+        },
+    )
+
+
+@login_required
+def order_activity_list(request):
+    order_lookup_attempts = (
+        get_order_lookup_attempt_records()
+    )
+
+    return render(
+        request,
+        "dashboard/order_activity_list.html",
+        {
+            "order_lookup_attempts": (
+                order_lookup_attempts
+            ),
         },
     )
