@@ -87,3 +87,7 @@ def get_order_lookup_attempt_records():
         )
         .all()
     )
+
+
+def get_product_records():
+    return Product.objects.all()

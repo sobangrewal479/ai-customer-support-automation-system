@@ -8,6 +8,7 @@ from dashboard.services import (
     get_handoff_request_records,
     get_lead_records,
     get_order_lookup_attempt_records,
+    get_product_records,
     get_unanswered_question_records,
 )
 from support_chat.models import ChatSession
@@ -126,5 +127,18 @@ def order_activity_list(request):
             "order_lookup_attempts": (
                 order_lookup_attempts
             ),
+        },
+    )
+
+
+@login_required
+def product_list(request):
+    products = get_product_records()
+
+    return render(
+        request,
+        "dashboard/product_list.html",
+        {
+            "products": products,
         },
     )

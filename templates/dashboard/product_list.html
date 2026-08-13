@@ -1,0 +1,273 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <meta
+        name="description"
+        content="Harbor & Pine approved product catalogue workspace."
+    >
+
+    <title>
+        Product Catalogue | Harbor &amp; Pine
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="{% static 'css/site.css' %}"
+    >
+
+    <link
+        rel="stylesheet"
+        href="{% static 'css/dashboard.css' %}"
+    >
+</head>
+
+<body>
+    <header class="site-header">
+        <div class="header-inner">
+            <a
+                class="brand"
+                href="{% url 'dashboard:home' %}"
+            >
+                <span class="brand-mark">
+                    H&amp;P
+                </span>
+
+                <span>
+                    <span class="brand-name">
+                        Harbor &amp; Pine
+                    </span>
+
+                    <span class="brand-subtitle">
+                        Support Operations
+                    </span>
+                </span>
+            </a>
+
+            <p class="location">
+                Product Catalogue
+            </p>
+        </div>
+    </header>
+
+    <main class="dashboard-main">
+        <section class="dashboard-hero">
+            <div class="dashboard-hero-content">
+                <p class="dashboard-eyebrow">
+                    Approved catalogue records
+                </p>
+
+                <h1 class="dashboard-title">
+                    Product catalogue
+                </h1>
+
+                <p class="dashboard-description">
+                    Review approved product information used by
+                    the customer-support assistant, including
+                    pricing, availability, stock band, materials,
+                    dimensions, care guidance, and data ownership.
+                </p>
+            </div>
+
+            <aside class="dashboard-user-card">
+                <p class="dashboard-user-label">
+                    Signed in as
+                </p>
+
+                <p class="dashboard-user-name">
+                    {{ request.user.username }}
+                </p>
+            </aside>
+        </section>
+
+        <section
+            class="dashboard-section"
+            aria-labelledby="product-catalogue-heading"
+        >
+            <div class="dashboard-section-heading">
+                <div>
+                    <p class="dashboard-eyebrow">
+                        Product records
+                    </p>
+
+                    <h2 id="product-catalogue-heading">
+                        Approved catalogue
+                    </h2>
+                </div>
+
+                <p>
+                    {{ products|length }}
+                    approved product{{ products|length|pluralize }}
+                    available for staff review.
+                </p>
+            </div>
+
+            {% if products %}
+                <div class="dashboard-area-grid">
+                    {% for product in products %}
+                        <article class="dashboard-area-card">
+                            <p class="dashboard-eyebrow">
+                                {{ product.get_status_display }}
+                            </p>
+
+                            <h3>
+                                {{ product.product_name }}
+                            </h3>
+
+                            <p>
+                                <strong>
+                                    SKU:
+                                </strong>
+
+                                {{ product.sku }}
+                            </p>
+
+                            <p>
+                                <strong>
+                                    Category:
+                                </strong>
+
+                                {{ product.get_category_display }}
+                            </p>
+
+                            <p>
+                                <strong>
+                                    Description:
+                                </strong>
+
+                                {{ product.short_description }}
+                            </p>
+
+                            <p>
+                                <strong>
+                                    Price:
+                                </strong>
+
+                                ${{ product.price_usd }}
+                            </p>
+
+                            <p>
+                                <strong>
+                                    Product status:
+                                </strong>
+
+                                {{ product.get_status_display }}
+                            </p>
+
+                            <p>
+                                <strong>
+                                    Stock band:
+                                </strong>
+
+                                {{ product.get_stock_band_display }}
+                            </p>
+
+                            <p>
+                                <strong>
+                                    Material:
+                                </strong>
+
+                                {{ product.material|default:"Not provided" }}
+                            </p>
+
+                            <p>
+                                <strong>
+                                    Color:
+                                </strong>
+
+                                {{ product.color|default:"Not provided" }}
+                            </p>
+
+                            <p>
+                                <strong>
+                                    Dimensions:
+                                </strong>
+
+                                {{ product.dimensions|default:"Not provided" }}
+                            </p>
+
+                            <p>
+                                <strong>
+                                    Care instructions:
+                                </strong>
+
+                                {{ product.care_instructions|default:"Not provided" }}
+                            </p>
+
+                            <p>
+                                <strong>
+                                    Last catalogue update:
+                                </strong>
+
+                                {{ product.last_updated|date:"d M Y"|default:"Not recorded" }}
+                            </p>
+
+                            <p>
+                                <strong>
+                                    Data owner:
+                                </strong>
+
+                                {{ product.data_owner }}
+                            </p>
+
+                            <p>
+                                <strong>
+                                    Product page:
+                                </strong>
+
+                                {% if product.product_url %}
+                                    <a
+                                        href="{{ product.product_url }}"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                    >
+                                        Open product page
+                                    </a>
+                                {% else %}
+                                    No product URL provided
+                                {% endif %}
+                            </p>
+                        </article>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <article class="dashboard-area-card">
+                    <h3>
+                        No approved products found
+                    </h3>
+
+                    <p>
+                        Approved catalogue records will appear here
+                        after product data has been imported into
+                        the portfolio database.
+                    </p>
+                </article>
+            {% endif %}
+        </section>
+
+        <section class="dashboard-section">
+            <a href="{% url 'dashboard:home' %}">
+                Return to dashboard
+            </a>
+        </section>
+    </main>
+
+    <footer class="site-footer">
+        <p>
+            Harbor &amp; Pine Living, Inc.
+
+            <span>
+                Internal staff workspace
+            </span>
+        </p>
+    </footer>
+</body>
+</html>

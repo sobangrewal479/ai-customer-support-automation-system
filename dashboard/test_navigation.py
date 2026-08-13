@@ -116,6 +116,25 @@ class DashboardNavigationTests(TestCase):
             "Open order activity",
         )
 
+    def test_dashboard_links_to_product_catalogue(self):
+        response = self.client.get(
+            reverse("dashboard:home")
+        )
+
+        product_url = reverse(
+            "dashboard:product_list"
+        )
+
+        self.assertContains(
+            response,
+            f'href="{product_url}"',
+        )
+
+        self.assertContains(
+            response,
+            "Open product catalogue",
+        )
+
     def test_dashboard_links_open_successfully(self):
         page_names = (
             "dashboard:conversation_list",
@@ -123,6 +142,7 @@ class DashboardNavigationTests(TestCase):
             "dashboard:lead_list",
             "dashboard:handoff_request_list",
             "dashboard:order_activity_list",
+            "dashboard:product_list",
         )
 
         for page_name in page_names:

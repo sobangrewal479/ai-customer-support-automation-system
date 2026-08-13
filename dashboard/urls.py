@@ -41,4 +41,9 @@ urlpatterns = [
         views.order_activity_list,
         name="order_activity_list",
     ),
+    path(
+        "products/",
+        views.product_list,
+        name="product_list",
+    ),
 ]
