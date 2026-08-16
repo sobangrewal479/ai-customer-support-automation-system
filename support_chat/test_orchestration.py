@@ -114,6 +114,52 @@ class ChatOrchestrationTests(TestCase):
             "TEST-FAQ-001",
         )
 
+        def test_paraphrased_return_window_question_uses_return_faq(
+        self,
+    ):
+            FAQ.objects.create(
+            faq_id="TEST-FAQ-SHIPPING",
+            category="Shipping",
+            question="How long does standard shipping take?",
+            approved_answer=(
+                "In-stock orders normally process in 1-2 "
+                "business days, followed by an estimated "
+                "3-7 business days in transit."
+            ),
+            keywords="how long standard shipping transit",
+            is_enabled=True,
+        )
+
+        FAQ.objects.create(
+            faq_id="TEST-FAQ-RETURN",
+            category="Returns",
+            question="What is the return window?",
+            approved_answer=(
+                "Most unused items may be requested for "
+                "return within 30 calendar days of delivery."
+            ),
+            keywords="return window 30 days return eligibility",
+            is_enabled=True,
+        )
+
+        _, assistant_message = process_customer_message(
+            self.session,
+            "how long after receiving the order i can return it?",
+        )
+
+        self.assertEqual(
+            assistant_message.detected_intent,
+            ChatMessage.Intent.FAQ,
+        )
+        self.assertEqual(
+            assistant_message.source_references[0]["source_id"],
+            "TEST-FAQ-RETURN",
+        )
+        self.assertIn(
+            "30 calendar days",
+            assistant_message.message,
+        )
+    
     def test_document_answer_uses_indexed_active_chunk(self):
         document = KnowledgeDocument.objects.create(
             title="Test Support Guide",

@@ -1,6 +1,8 @@
 from uuid import UUID
 
 from django.shortcuts import redirect, render
+from django.urls import reverse
+from django.views.decorators.clickjacking import xframe_options_sameorigin
 from django.views.decorators.http import require_http_methods
 
 from support_chat.models import ChatSession
@@ -39,10 +41,12 @@ def get_or_create_chat_session(request):
     return chat_session
 
 
+@xframe_options_sameorigin
 @require_http_methods(["GET", "POST"])
 def chat_page(request):
     chat_session = get_or_create_chat_session(request)
     error = ""
+    widget_mode = request.GET.get("widget") == "1"
 
     if request.method == "POST":
         customer_text = request.POST.get(
@@ -85,13 +89,21 @@ def chat_page(request):
                 customer_text,
             )
 
-            return redirect("support_chat:chat")
+            chat_url = reverse("support_chat:chat")
+
+            if widget_mode:
+                return redirect(
+                    f"{chat_url}?widget=1"
+                )
+
+            return redirect(chat_url)
 
     context = {
         "chat_session": chat_session,
         "chat_messages": chat_session.messages.all(),
         "error": error,
         "max_message_length": MAX_MESSAGE_LENGTH,
+        "widget_mode": widget_mode,
     }
 
     return render(
