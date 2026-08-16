@@ -548,3 +548,165 @@ body.widget-mode {
         width: 100%;
     }
 }
+
+/* Smooth widget message submission */
+
+.widget-mode .chat-form[aria-busy="true"] {
+    position: relative;
+}
+
+.widget-mode .chat-form textarea:disabled {
+    background: #f8fafb;
+    color: var(--muted);
+    cursor: wait;
+}
+
+.widget-mode .chat-form-footer button:disabled {
+    background: #6b9fa1;
+    cursor: wait;
+}
+
+.chat-message--typing {
+    min-width: 88px;
+}
+
+.typing-indicator {
+    min-height: 20px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.typing-indicator span {
+    width: 7px;
+    height: 7px;
+    background: #8aa0aa;
+    border-radius: 50%;
+    animation:
+        chat-typing-dot
+        1.15s
+        infinite
+        ease-in-out;
+}
+
+.typing-indicator span:nth-child(2) {
+    animation-delay: 0.14s;
+}
+
+.typing-indicator span:nth-child(3) {
+    animation-delay: 0.28s;
+}
+
+@keyframes chat-typing-dot {
+    0%,
+    60%,
+    100% {
+        opacity: 0.35;
+        transform: translateY(0);
+    }
+
+    30% {
+        opacity: 1;
+        transform: translateY(-3px);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .typing-indicator span {
+        animation: none;
+        opacity: 0.65;
+    }
+
+    .widget-mode .chat-transcript {
+        scroll-behavior: auto;
+    }
+}
+
+/* Final compact-chat visual polish */
+
+.widget-mode .chat-transcript {
+    scroll-behavior: smooth;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    scrollbar-color:
+        #b7c7cd
+        transparent;
+}
+
+.widget-mode .chat-transcript::-webkit-scrollbar {
+    width: 7px;
+}
+
+.widget-mode .chat-transcript::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.widget-mode .chat-transcript::-webkit-scrollbar-thumb {
+    background: #b7c7cd;
+    border-radius: 999px;
+}
+
+.widget-mode .chat-message {
+    box-shadow: 0 3px 12px rgba(23, 50, 77, 0.045);
+}
+
+.widget-mode .chat-message--customer {
+    box-shadow: none;
+}
+
+.widget-mode .chat-form {
+    box-shadow: 0 -8px 24px rgba(23, 50, 77, 0.035);
+}
+
+.widget-mode .chat-form textarea {
+    transition:
+        border-color 0.15s ease,
+        box-shadow 0.15s ease,
+        background 0.15s ease;
+}
+
+.widget-mode .chat-form textarea:focus {
+    box-shadow: 0 0 0 3px rgba(23, 123, 128, 0.1);
+}
+
+.widget-mode .chat-form-footer button {
+    transition:
+        background 0.16s ease,
+        transform 0.12s ease;
+}
+
+.widget-mode .chat-form-footer button:active:not(:disabled) {
+    transform: scale(0.98);
+}
+
+@media (max-width: 600px) {
+    .widget-mode .chat-transcript {
+        padding: 16px 14px;
+    }
+
+    .widget-mode .chat-message {
+        max-width: 90%;
+        font-size: 0.88rem;
+    }
+
+    .widget-mode .chat-form {
+        padding:
+            12px
+            13px
+            max(
+                13px,
+                env(safe-area-inset-bottom)
+            );
+    }
+
+    .widget-mode .chat-shell .chat-form > textarea {
+        min-height: 72px;
+        max-height: 105px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .widget-mode .chat-transcript {
+        scroll-behavior: auto;
+    }
+}

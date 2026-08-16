@@ -14,7 +14,7 @@ class HomePageTests(TestCase):
 
         self.assertContains(
             response,
-            "Essentials designed for",
+            "Thoughtful essentials",
         )
         self.assertContains(
             response,

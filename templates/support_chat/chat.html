@@ -242,7 +242,11 @@
 
                     <div class="chat-form-footer">
                         <span>
-                            Maximum {{ max_message_length }} characters
+                            {% if widget_mode %}
+                                Enter to send · Shift+Enter for a new line
+                            {% else %}
+                                Maximum {{ max_message_length }} characters
+                            {% endif %}
                         </span>
 
                         <button type="submit">
@@ -262,5 +266,9 @@
             </p>
         </footer>
     {% endif %}
+    <script
+    src="{% static 'js/chat.js' %}"
+    defer
+></script>
 </body>
 </html>

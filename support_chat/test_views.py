@@ -45,7 +45,7 @@ class ChatPageViewTests(TestCase):
             self.client.session,
         )
 
-    def test_existing_browser_session_reuses_chat_session(self):
+    def test_refresh_starts_new_chat_session(self):
         self.client.get(
             reverse("support_chat:chat")
         )
@@ -62,14 +62,14 @@ class ChatPageViewTests(TestCase):
             CHAT_SESSION_KEY
         ]
 
-        self.assertEqual(
+        self.assertNotEqual(
             first_session_id,
             second_session_id,
         )
 
         self.assertEqual(
             ChatSession.objects.count(),
-            1,
+            2,
         )
 
     def test_privacy_acknowledgement_is_required(self):
@@ -184,6 +184,45 @@ class ChatPageViewTests(TestCase):
                 ChatMessage.SenderType.CUSTOMER,
                 ChatMessage.SenderType.ASSISTANT,
             ],
+        )
+
+    def test_post_redirect_keeps_chat_before_refresh(self):
+        self.client.get(
+            reverse("support_chat:chat")
+        )
+
+        original_session_id = self.client.session[
+            CHAT_SESSION_KEY
+        ]
+
+        response = self.client.post(
+            reverse("support_chat:chat"),
+            {
+                "privacy_acknowledged": "yes",
+                "message": "Hello",
+            },
+            follow=True,
+        )
+
+        self.assertEqual(
+            response.status_code,
+            200,
+        )
+
+        self.assertEqual(
+            self.client.session[
+                CHAT_SESSION_KEY
+            ],
+            original_session_id,
+        )
+
+        chat_session = ChatSession.objects.get(
+            session_id=original_session_id
+        )
+
+        self.assertEqual(
+            chat_session.messages.count(),
+            2,
         )
 
     def test_widget_mode_loads_compact_chat(self):

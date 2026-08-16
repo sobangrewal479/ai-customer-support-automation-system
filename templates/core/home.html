@@ -59,76 +59,43 @@
     </header>
 
     <main>
-        <section class="store-hero">
-            <div class="store-hero-inner">
-                <div class="store-hero-content">
-                    <p class="eyebrow">
-                        Calm spaces. Practical living.
-                    </p>
+        
+        <section class="store-banner">
+            <img
+                class="store-banner-image"
+                src="{% static 'images/banner/harbor-pine-home-banner.png' %}"
+                alt="Harbor & Pine home organization, kitchen, bath, office, and everyday living essentials"
+                fetchpriority="high"
+            >
 
-                    <h1>
-                        Essentials designed for
-                        everyday spaces.
-                    </h1>
+            <div class="store-banner-shade"></div>
 
-                    <p class="store-hero-description">
-                        Thoughtful home organization and lifestyle
-                        essentials for kitchens, baths, offices,
-                        outdoor spaces, and the rooms you use
-                        every day.
-                    </p>
+            <div class="store-banner-content">
+                <span class="store-banner-eyebrow">
+                    Harbor &amp; Pine
+                </span>
 
-                    <div class="store-hero-actions">
-                        <a
-                            class="primary-button"
-                            href="#shop-categories"
-                        >
-                            Shop collections
-                        </a>
+                <h1>
+                    Thoughtful essentials
+                    for everyday living.
+                </h1>
 
-                        <a
-                            class="secondary-button"
-                            href="/support/"
-                        >
-                            Get support
-                        </a>
-                    </div>
+                <p>
+                    Practical pieces for calmer homes,
+                    organized spaces, and everyday routines.
+                </p>
+
+                <div class="store-banner-details">
+                    <span>Home</span>
+                    <span>Kitchen</span>
+                    <span>Bath</span>
+                    <span>Office</span>
+                    <span>Outdoor</span>
                 </div>
-
-                <aside class="hero-showcase">
-                    <p class="showcase-label">
-                        Harbor &amp; Pine Living
-                    </p>
-
-                    <h2>
-                        Simple pieces for a calmer home.
-                    </h2>
-
-                    <p>
-                        Practical products, clear information,
-                        and dependable support — without the
-                        unnecessary complexity.
-                    </p>
-
-                    <div class="showcase-grid">
-                        <div>
-                            <span>01</span>
-                            <strong>Organize</strong>
-                        </div>
-
-                        <div>
-                            <span>02</span>
-                            <strong>Simplify</strong>
-                        </div>
-
-                        <div>
-                            <span>03</span>
-                            <strong>Live well</strong>
-                        </div>
-                    </div>
-                </aside>
             </div>
         </section>
+
+        
 
         <section
             class="service-strip"
@@ -396,6 +363,7 @@
     </footer>
 
     <section
+        id="harbor-pine-support-widget"
         class="support-widget"
         data-support-widget
         aria-label="Harbor & Pine Support"
