@@ -27,91 +27,120 @@
         href="{% static 'css/chat.css' %}"
     >
 </head>
-<body>
-    <header class="site-header">
-        <div class="header-inner">
-            <a
-                class="brand chat-brand-link"
-                href="/"
-            >
-                <span class="brand-mark">H&amp;P</span>
 
-                <span>
-                    <span class="brand-name">
-                        Harbor &amp; Pine
+<body class="{% if widget_mode %}widget-mode{% endif %}">
+    {% if not widget_mode %}
+        <header class="site-header">
+            <div class="header-inner">
+                <a
+                    class="brand chat-brand-link"
+                    href="/"
+                >
+                    <span class="brand-mark">H&amp;P</span>
+
+                    <span>
+                        <span class="brand-name">
+                            Harbor &amp; Pine
+                        </span>
+
+                        <span class="brand-subtitle">
+                            Living
+                        </span>
                     </span>
+                </a>
 
-                    <span class="brand-subtitle">
-                        Living
-                    </span>
-                </span>
-            </a>
+                <p class="location">Customer Support</p>
+            </div>
+        </header>
+    {% endif %}
 
-            <p class="location">Customer Support</p>
-        </div>
-    </header>
+    <main
+        class="
+            {% if widget_mode %}
+                chat-page--widget
+            {% else %}
+                chat-page
+            {% endif %}
+        "
+    >
+        <section
+            class="
+                chat-layout
+                {% if widget_mode %}
+                    chat-layout--widget
+                {% endif %}
+            "
+        >
+            {% if not widget_mode %}
+                <aside class="chat-information">
+                    <p class="eyebrow">Approved support</p>
 
-    <main class="chat-page">
-        <section class="chat-layout">
-            <aside class="chat-information">
-                <p class="eyebrow">Approved support</p>
+                    <h1>How can we help?</h1>
 
-                <h1>How can we help?</h1>
-
-                <p class="chat-description">
-                    Ask about Harbor &amp; Pine products,
-                    shipping, returns, care instructions,
-                    policies, and other approved support
-                    information.
-                </p>
-
-                <div class="privacy-notice">
-                    <strong>Privacy notice</strong>
-
-                    <p>
-                        Do not share passwords, full payment-card
-                        details, bank information, government IDs,
-                        or other sensitive information in chat.
+                    <p class="chat-description">
+                        Ask about Harbor &amp; Pine products,
+                        shipping, returns, care instructions,
+                        policies, and other approved support
+                        information.
                     </p>
-                </div>
 
-                <div class="support-boundaries">
-                    <h2>This support chat can help with:</h2>
+                    <div class="privacy-notice">
+                        <strong>Privacy notice</strong>
 
-                    <ul>
-                        <li>Approved FAQ and policy information</li>
-                        <li>Product details and availability</li>
-                        <li>Approved document-based answers</li>
-                        <li>Safe next steps when evidence is unavailable</li>
-                    </ul>
-                </div>
+                        <p>
+                            Do not share passwords, full payment-card
+                            details, bank information, government IDs,
+                            or other sensitive information in chat.
+                        </p>
+                    </div>
 
-                <p class="response-target">
-                    Human-support target: within one business day.
-                    This is a target, not a guarantee.
-                </p>
-            </aside>
+                    <div class="support-boundaries">
+                        <h2>This support chat can help with:</h2>
+
+                        <ul>
+                            <li>Approved FAQ and policy information</li>
+                            <li>Product details and availability</li>
+                            <li>Approved document-based answers</li>
+                            <li>Safe next steps when evidence is unavailable</li>
+                        </ul>
+                    </div>
+
+                    <p class="response-target">
+                        Human-support target: within one business day.
+                        This is a target, not a guarantee.
+                    </p>
+                </aside>
+            {% endif %}
 
             <section
                 class="chat-shell"
                 aria-labelledby="chat-heading"
             >
-                <div class="chat-shell-header">
-                    <div>
-                        <p class="chat-status-label">
-                            Harbor &amp; Pine Support
-                        </p>
+                {% if not widget_mode %}
+                    <div class="chat-shell-header">
+                        <div>
+                            <p class="chat-status-label">
+                                Harbor &amp; Pine Support
+                            </p>
 
-                        <h2 id="chat-heading">
-                            Customer-support chat
-                        </h2>
+                            <h2 id="chat-heading">
+                                Customer-support chat
+                            </h2>
+                        </div>
+
+                        <span class="chat-status">
+                            <span class="status-dot"></span>
+                            Available
+                        </span>
                     </div>
-
-                    <span class="chat-status">
-                        <span class="status-dot"></span>
-                        Available
-                    </span>
-                </div>
+                {% else %}
+                    <h1
+                        id="chat-heading"
+                        class="visually-hidden"
+                    >
+                        Harbor &amp; Pine Support chat
+                    </h1>
+                {% endif %}
 
                 <div
                     class="chat-transcript"
@@ -129,9 +158,7 @@
                                     {{ chat_message.get_sender_type_display }}
                                 </p>
 
-                                <p class="chat-message-text">
-                                    {{ chat_message.message }}
-                                </p>
+                                <p class="chat-message-text">{{ chat_message.message }}</p>
 
                                 {% if chat_message.source_references %}
                                     <div class="chat-sources">
@@ -147,16 +174,17 @@
                             </article>
                         {% endfor %}
                     {% else %}
-                        <article class="chat-message chat-message--assistant">
+                        <article
+                            class="
+                                chat-message
+                                chat-message--assistant
+                            "
+                        >
                             <p class="chat-message-sender">
                                 Harbor &amp; Pine Support
                             </p>
 
-                            <p class="chat-message-text">
-                                Hello! Ask me an approved product,
-                                shipping, return, care, or policy
-                                question.
-                            </p>
+                            <p class="chat-message-text">Hello! Ask me an approved product, shipping, return, care, or policy question.</p>
                         </article>
                     {% endif %}
                 </div>
@@ -214,7 +242,11 @@
 
                     <div class="chat-form-footer">
                         <span>
-                            Maximum {{ max_message_length }} characters
+                            {% if widget_mode %}
+                                Enter to send · Shift+Enter for a new line
+                            {% else %}
+                                Maximum {{ max_message_length }} characters
+                            {% endif %}
                         </span>
 
                         <button type="submit">
@@ -226,11 +258,17 @@
         </section>
     </main>
 
-    <footer class="site-footer">
-        <p>
-            Harbor &amp; Pine Living, Inc.
-            <span>Fictional portfolio client</span>
-        </p>
-    </footer>
+    {% if not widget_mode %}
+        <footer class="site-footer">
+            <p>
+                Harbor &amp; Pine Living, Inc.
+                <span>Fictional portfolio client</span>
+            </p>
+        </footer>
+    {% endif %}
+    <script
+    src="{% static 'js/chat.js' %}"
+    defer
+></script>
 </body>
 </html>

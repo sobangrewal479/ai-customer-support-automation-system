@@ -4,89 +4,431 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+
     <meta
         name="viewport"
         content="width=device-width, initial-scale=1.0"
     >
+
     <meta
         name="description"
-        content="Customer support for Harbor & Pine Living."
+        content="Harbor & Pine Living - calm, practical home organization and lifestyle essentials."
     >
 
-    <title>Harbor & Pine Living | Customer Support</title>
+    <title>Harbor & Pine Living | Home</title>
 
     <link
         rel="stylesheet"
         href="{% static 'css/site.css' %}"
     >
 </head>
+
 <body>
     <header class="site-header">
         <div class="header-inner">
-            <div class="brand">
+            <a class="brand brand-link" href="/">
                 <span class="brand-mark">H&amp;P</span>
 
-                <div>
-                    <p class="brand-name">Harbor &amp; Pine</p>
-                    <p class="brand-subtitle">Living</p>
-                </div>
-            </div>
+                <span class="brand-copy">
+                    <span class="brand-name">
+                        Harbor &amp; Pine
+                    </span>
 
-            <p class="location">Austin, Texas</p>
+                    <span class="brand-subtitle">
+                        Living
+                    </span>
+                </span>
+            </a>
+
+            <nav
+                class="store-nav"
+                aria-label="Main navigation"
+            >
+                <a href="#shop-categories">Shop</a>
+                <a href="#our-story">Our Story</a>
+                <a href="#customer-support">Support</a>
+            </nav>
+
+            <a
+                class="header-support-link"
+                href="/support/"
+            >
+                Customer Support
+            </a>
         </div>
     </header>
 
-    <main class="page">
-        <section class="hero">
-            <div class="hero-content">
-                <p class="eyebrow">Customer Support</p>
+    <main>
+        
+        <section class="store-banner">
+            <img
+                class="store-banner-image"
+                src="{% static 'images/banner/harbor-pine-home-banner.png' %}"
+                alt="Harbor & Pine home organization, kitchen, bath, office, and everyday living essentials"
+                fetchpriority="high"
+            >
 
-                <h1>Calm, clear support for everyday living.</h1>
+            <div class="store-banner-shade"></div>
 
-                <p class="description">
-                    Find approved information about our products,
-                    orders, shipping, returns, care instructions,
-                    and other common support questions.
+            <div class="store-banner-content">
+                <span class="store-banner-eyebrow">
+                    Harbor &amp; Pine
+                </span>
+
+                <h1>
+                    Thoughtful essentials
+                    for everyday living.
+                </h1>
+
+                <p>
+                    Practical pieces for calmer homes,
+                    organized spaces, and everyday routines.
                 </p>
 
-                <div class="business-details">
-                    <div>
-                        <span>Support hours</span>
-                        <strong>Mon–Fri, 9 AM–6 PM CT</strong>
-                    </div>
-
-                    <div>
-                        <span>Human response target</span>
-                        <strong>Within one business day</strong>
-                    </div>
+                <div class="store-banner-details">
+                    <span>Home</span>
+                    <span>Kitchen</span>
+                    <span>Bath</span>
+                    <span>Office</span>
+                    <span>Outdoor</span>
                 </div>
             </div>
+        </section>
 
-            <aside class="support-card">
-                <p class="card-label">Support experience</p>
+        
 
-                <h2>How can we help?</h2>
-
-                <ul>
-                    <li>Product information and availability</li>
-                    <li>Shipping and return policies</li>
-                    <li>Order-status assistance</li>
-                    <li>Sales inquiries and human support</li>
-                </ul>
-
-                <div class="system-status">
-                    <span class="status-dot"></span>
-                    Support-system foundation ready
+        <section
+            class="service-strip"
+            aria-label="Store service information"
+        >
+            <div class="service-strip-inner">
+                <div>
+                    <strong>Contiguous U.S.</strong>
+                    <span>Standard shipping region</span>
                 </div>
-            </aside>
+
+                <div>
+                    <strong>$75+ eligible orders</strong>
+                    <span>Free standard shipping</span>
+                </div>
+
+                <div>
+                    <strong>30-day window</strong>
+                    <span>Eligible return requests</span>
+                </div>
+
+                <div>
+                    <strong>Human support</strong>
+                    <span>Available when you need it</span>
+                </div>
+            </div>
+        </section>
+
+        <section
+            id="shop-categories"
+            class="store-section category-section"
+        >
+            <div class="section-heading">
+                <div>
+                    <p class="eyebrow">Shop by collection</p>
+
+                    <h2>Find what fits your space.</h2>
+                </div>
+
+                <p>
+                    Explore Harbor &amp; Pine's five approved
+                    product collections.
+                </p>
+            </div>
+
+            <div class="category-grid">
+                <article class="category-card">
+                    <div class="category-image-wrapper">
+                        <img
+                            class="category-image"
+                            src="{% static 'images/categories/home-organization.png' %}"
+                            alt="Organized home shelving with woven storage baskets and folded textiles"
+                            loading="lazy"
+                        >
+
+                        <div class="category-number">01</div>
+                    </div>
+
+                    <div class="category-content">
+                        <p class="category-kicker">
+                            Everyday order
+                        </p>
+
+                        <h3>Home Organization</h3>
+
+                        <p>
+                            Practical pieces for creating
+                            cleaner, calmer living spaces.
+                        </p>
+                    </div>
+                </article>
+
+                <article class="category-card">
+                    <div class="category-image-wrapper">
+                        <img
+                            class="category-image"
+                            src="{% static 'images/categories/kitchen.png' %}"
+                            alt="Warm kitchen counter with ceramic containers and wooden utensils"
+                            loading="lazy"
+                        >
+
+                        <div class="category-number">02</div>
+                    </div>
+
+                    <div class="category-content">
+                        <p class="category-kicker">
+                            Daily routines
+                        </p>
+
+                        <h3>Kitchen</h3>
+
+                        <p>
+                            Functional essentials designed
+                            around everyday kitchen use.
+                        </p>
+                    </div>
+                </article>
+
+                <article class="category-card">
+                    <div class="category-image-wrapper">
+                        <img
+                            class="category-image"
+                            src="{% static 'images/categories/bath.png' %}"
+                            alt="Calm bathroom vanity with towels and natural bath accessories"
+                            loading="lazy"
+                        >
+
+                        <div class="category-number">03</div>
+                    </div>
+
+                    <div class="category-content">
+                        <p class="category-kicker">
+                            Calm details
+                        </p>
+
+                        <h3>Bath</h3>
+
+                        <p>
+                            Simple organization and lifestyle
+                            pieces for bathroom spaces.
+                        </p>
+                    </div>
+                </article>
+
+                <article class="category-card">
+                    <div class="category-image-wrapper">
+                        <img
+                            class="category-image"
+                            src="{% static 'images/categories/office.png' %}"
+                            alt="Organized home office desk with storage accessories"
+                            loading="lazy"
+                        >
+
+                        <div class="category-number">04</div>
+                    </div>
+
+                    <div class="category-content">
+                        <p class="category-kicker">
+                            Focused spaces
+                        </p>
+
+                        <h3>Office</h3>
+
+                        <p>
+                            Practical organization for desks,
+                            workspaces, and daily routines.
+                        </p>
+                    </div>
+                </article>
+
+                <article class="category-card">
+                    <div class="category-image-wrapper">
+                        <img
+                            class="category-image"
+                            src="{% static 'images/categories/outdoor.png' %}"
+                            alt="Outdoor patio seating with natural wood and green plants"
+                            loading="lazy"
+                        >
+
+                        <div class="category-number">05</div>
+                    </div>
+
+                    <div class="category-content">
+                        <p class="category-kicker">
+                            Outside living
+                        </p>
+
+                        <h3>Outdoor</h3>
+
+                        <p>
+                            Useful lifestyle pieces for
+                            organized outdoor spaces.
+                        </p>
+                    </div>
+                </article>
+            </div>
+        </section>
+
+        <section
+            id="our-story"
+            class="store-section story-section"
+        >
+            <div class="story-card">
+                <div>
+                    <p class="eyebrow">Our approach</p>
+
+                    <h2>
+                        Clear information.
+                        Practical products.
+                        Dependable support.
+                    </h2>
+                </div>
+
+                <div class="story-copy">
+                    <p>
+                        Harbor &amp; Pine Living is built around
+                        calm, practical home essentials and a
+                        straightforward customer experience.
+                    </p>
+
+                    <p>
+                        Whether you are comparing product details,
+                        checking care instructions, reviewing a
+                        policy, or looking for help with an order,
+                        our support experience is designed to give
+                        you a clear next step.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <section
+            id="customer-support"
+            class="store-section support-promo-section"
+        >
+            <div class="support-promo">
+                <div>
+                    <p class="eyebrow">Customer support</p>
+
+                    <h2>
+                        Questions before or after your order?
+                    </h2>
+
+                    <p>
+                        Harbor &amp; Pine Support can help with
+                        approved product information, shipping,
+                        returns, care instructions, order-status
+                        assistance, and other common questions.
+                    </p>
+                </div>
+
+                <div class="support-promo-actions">
+                    <a
+                        class="primary-button"
+                        href="/support/"
+                    >
+                        Open Harbor &amp; Pine Support
+                    </a>
+
+                    <span>
+                        Human-support target:
+                        within one business day.
+                    </span>
+                </div>
+            </div>
         </section>
     </main>
 
     <footer class="site-footer">
-        <p>
-            Harbor &amp; Pine Living, Inc.
-            <span>Fictional portfolio client</span>
-        </p>
+        <div class="footer-inner">
+            <div>
+                <strong>Harbor &amp; Pine Living, Inc.</strong>
+
+                <span>Fictional portfolio client</span>
+            </div>
+
+            <div>
+                <span>Austin, Texas</span>
+
+                <span>
+                    support@harborandpine.example
+                </span>
+            </div>
+        </div>
     </footer>
+
+    <section
+        id="harbor-pine-support-widget"
+        class="support-widget"
+        data-support-widget
+        aria-label="Harbor & Pine Support"
+        hidden
+    >
+        <div class="support-widget-header">
+            <div>
+                <span class="support-widget-status">
+                    <span class="status-dot"></span>
+                    Available
+                </span>
+
+                <strong>Harbor &amp; Pine Support</strong>
+            </div>
+
+            <div class="support-widget-controls">
+                <button
+                    type="button"
+                    class="support-widget-control"
+                    data-support-widget-minimize
+                    aria-label="Minimize Harbor & Pine Support"
+                    title="Minimize"
+                >
+                    &minus;
+                </button>
+
+                <button
+                    type="button"
+                    class="support-widget-control"
+                    data-support-widget-close
+                    aria-label="Close Harbor & Pine Support"
+                    title="Close"
+                >
+                    &times;
+                </button>
+            </div>
+        </div>
+
+        <iframe
+            class="support-widget-frame"
+            src="/support/?widget=1"
+            title="Harbor & Pine Support chat"
+        ></iframe>
+    </section>
+
+    <button
+        type="button"
+        class="support-widget-launcher"
+        data-support-widget-launcher
+        aria-controls="harbor-pine-support-widget"
+        aria-expanded="false"
+    >
+        <span class="support-widget-launcher-icon">
+            ?
+        </span>
+
+        <span class="support-widget-launcher-copy">
+            <strong>Need help?</strong>
+            <span>Harbor &amp; Pine Support</span>
+        </span>
+    </button>
+
+    <script
+        src="{% static 'js/support-widget.js' %}"
+        defer
+    ></script>
 </body>
 </html>
