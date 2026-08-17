@@ -7,6 +7,13 @@ from catalog.models import Product
 MINIMUM_PRODUCT_SCORE = 4
 TOKEN_PATTERN = re.compile(r"[a-z0-9]+")
 
+CATEGORY_CONTEXT_SCORE = 12
+
+CATEGORY_CONTEXT_HINTS = {
+    "desk": "Office",
+    "workspace": "Office",
+}
+
 
 @dataclass(frozen=True)
 class ProductSearchResult:
@@ -29,19 +36,49 @@ class ProductResolution:
 
 
 def normalize_text(value):
-    return " ".join(TOKEN_PATTERN.findall((value or "").lower()))
+    return " ".join(
+        TOKEN_PATTERN.findall(
+            (value or "").lower()
+        )
+    )
 
 
 def tokenize(value):
-    return set(TOKEN_PATTERN.findall((value or "").lower()))
+    return set(
+        TOKEN_PATTERN.findall(
+            (value or "").lower()
+        )
+    )
 
 
-def score_product(product, normalized_query, query_tokens):
+def get_category_context_score(
+    product,
+    query_tokens,
+):
+    hinted_categories = {
+        category
+        for token, category in CATEGORY_CONTEXT_HINTS.items()
+        if token in query_tokens
+    }
+
+    if product.category in hinted_categories:
+        return CATEGORY_CONTEXT_SCORE
+
+    return 0
+
+
+def score_product(
+    product,
+    normalized_query,
+    query_tokens,
+):
     score = 0
     matched_fields = []
 
     normalized_sku = normalize_text(product.sku)
-    normalized_name = normalize_text(product.product_name)
+    normalized_name = normalize_text(
+        product.product_name
+    )
 
     if normalized_query == normalized_sku:
         return 100, ("sku",)
@@ -55,29 +92,87 @@ def score_product(product, normalized_query, query_tokens):
     if normalized_query == normalized_name:
         return 80, ("product_name",)
 
-    if normalized_query and normalized_query in normalized_name:
+    if (
+        normalized_query
+        and normalized_query in normalized_name
+    ):
         score += 20
-        matched_fields.append("product_name")
+        matched_fields.append(
+            "product_name"
+        )
 
     fields_and_weights = (
-        ("product_name", product.product_name, 8),
-        ("sku", product.sku, 6),
-        ("category", product.category, 4),
-        ("material", product.material, 3),
-        ("color", product.color, 3),
-        ("short_description", product.short_description, 1),
+        (
+            "product_name",
+            product.product_name,
+            8,
+        ),
+        (
+            "sku",
+            product.sku,
+            6,
+        ),
+        (
+            "category",
+            product.category,
+            4,
+        ),
+        (
+            "material",
+            product.material,
+            3,
+        ),
+        (
+            "color",
+            product.color,
+            3,
+        ),
+        (
+            "short_description",
+            product.short_description,
+            1,
+        ),
     )
 
-    for field_name, field_value, weight in fields_and_weights:
-        matching_tokens = query_tokens.intersection(
-            tokenize(field_value)
+    for (
+        field_name,
+        field_value,
+        weight,
+    ) in fields_and_weights:
+        matching_tokens = (
+            query_tokens.intersection(
+                tokenize(field_value)
+            )
         )
 
         if matching_tokens:
-            score += len(matching_tokens) * weight
+            score += (
+                len(matching_tokens)
+                * weight
+            )
 
             if field_name not in matched_fields:
-                matched_fields.append(field_name)
+                matched_fields.append(
+                    field_name
+                )
+
+    category_context_score = (
+        get_category_context_score(
+            product,
+            query_tokens,
+        )
+    )
+
+    if category_context_score:
+        score += category_context_score
+
+        if (
+            "category_context"
+            not in matched_fields
+        ):
+            matched_fields.append(
+                "category_context"
+            )
 
     return score, tuple(matched_fields)
 
@@ -92,10 +187,12 @@ def search_products(query, limit=5):
     results = []
 
     for product in Product.objects.all():
-        score, matched_fields = score_product(
-            product,
-            normalized_query,
-            query_tokens,
+        score, matched_fields = (
+            score_product(
+                product,
+                normalized_query,
+                query_tokens,
+            )
         )
 
         if score >= MINIMUM_PRODUCT_SCORE:
@@ -103,7 +200,9 @@ def search_products(query, limit=5):
                 ProductSearchResult(
                     product=product,
                     score=score,
-                    matched_fields=matched_fields,
+                    matched_fields=(
+                        matched_fields
+                    ),
                 )
             )
 
@@ -118,7 +217,10 @@ def search_products(query, limit=5):
 
 
 def resolve_product(query, limit=5):
-    results = search_products(query, limit=limit)
+    results = search_products(
+        query,
+        limit=limit,
+    )
 
     if not results:
         return ProductResolution(
@@ -128,7 +230,8 @@ def resolve_product(query, limit=5):
 
     if (
         len(results) > 1
-        and results[0].score == results[1].score
+        and results[0].score
+        == results[1].score
     ):
         return ProductResolution(
             status="ambiguous",
@@ -144,19 +247,24 @@ def resolve_product(query, limit=5):
 def get_availability_message(product):
     messages = {
         Product.Status.ACTIVE: (
-            "This product is active in the approved catalog."
+            "This product is active in the "
+            "approved catalog."
         ),
         Product.Status.LOW_STOCK: (
-            "This product is marked as low stock. Availability "
-            "cannot be guaranteed or reserved in chat."
+            "This product is marked as low stock. "
+            "Availability cannot be guaranteed or "
+            "reserved in chat."
         ),
         Product.Status.OUT_OF_STOCK: (
-            "This product is currently out of stock. The approved "
-            "record does not provide a restock date."
+            "This product is currently out of stock. "
+            "The approved record does not provide a "
+            "restock date."
         ),
         Product.Status.DISCONTINUED: (
-            "This product is discontinued. Human support can help "
-            "with general alternatives, but no replacement is promised."
+            "This product is discontinued. Human "
+            "support can help with general "
+            "alternatives, but no replacement is "
+            "promised."
         ),
     }
 

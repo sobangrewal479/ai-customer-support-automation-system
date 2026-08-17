@@ -29,6 +29,7 @@ class ProductRetrievalTests(TestCase):
             "last_updated": date(2026, 7, 1),
             "data_owner": "Catalog Manager",
         }
+
         values.update(overrides)
 
         return Product.objects.create(
@@ -45,12 +46,20 @@ class ProductRetrievalTests(TestCase):
 
         resolution = resolve_product("HP-KI-001")
 
-        self.assertEqual(resolution.status, "found")
+        self.assertEqual(
+            resolution.status,
+            "found",
+        )
+
         self.assertEqual(
             resolution.best_match.product,
             product,
         )
-        self.assertEqual(resolution.best_match.score, 100)
+
+        self.assertEqual(
+            resolution.best_match.score,
+            100,
+        )
 
     def test_exact_product_name_returns_product(self):
         product = self.create_product(
@@ -62,7 +71,11 @@ class ProductRetrievalTests(TestCase):
             "Stoneware Utensil Holder"
         )
 
-        self.assertEqual(resolution.status, "found")
+        self.assertEqual(
+            resolution.status,
+            "found",
+        )
+
         self.assertEqual(
             resolution.best_match.product,
             product,
@@ -73,6 +86,7 @@ class ProductRetrievalTests(TestCase):
             "HP-KI-003",
             "Expandable Bamboo Drawer Tray",
         )
+
         self.create_product(
             "HP-KI-004",
             "Cotton Kitchen Towel Set",
@@ -82,7 +96,11 @@ class ProductRetrievalTests(TestCase):
             "expandable bamboo tray"
         )
 
-        self.assertEqual(resolution.status, "found")
+        self.assertEqual(
+            resolution.status,
+            "found",
+        )
+
         self.assertEqual(
             resolution.best_match.product,
             product,
@@ -94,16 +112,26 @@ class ProductRetrievalTests(TestCase):
             "Glass Pantry Jar",
             material="Glass",
         )
+
         self.create_product(
             "HP-KI-006",
             "Metal Dish Rack",
             material="Metal",
         )
 
-        resolution = resolve_product("Kitchen")
+        resolution = resolve_product(
+            "Kitchen"
+        )
 
-        self.assertEqual(resolution.status, "ambiguous")
-        self.assertEqual(len(resolution.matches), 2)
+        self.assertEqual(
+            resolution.status,
+            "ambiguous",
+        )
+
+        self.assertEqual(
+            len(resolution.matches),
+            2,
+        )
 
     def test_unknown_product_returns_not_found(self):
         self.create_product(
@@ -115,8 +143,15 @@ class ProductRetrievalTests(TestCase):
             "electric coffee machine"
         )
 
-        self.assertEqual(resolution.status, "not_found")
-        self.assertEqual(resolution.matches, ())
+        self.assertEqual(
+            resolution.status,
+            "not_found",
+        )
+
+        self.assertEqual(
+            resolution.matches,
+            (),
+        )
 
     def test_empty_query_returns_no_results(self):
         self.create_product(
@@ -124,24 +159,40 @@ class ProductRetrievalTests(TestCase):
             "Wood Serving Board",
         )
 
-        self.assertEqual(search_products(""), [])
-        self.assertEqual(search_products("   "), [])
+        self.assertEqual(
+            search_products(""),
+            [],
+        )
+
+        self.assertEqual(
+            search_products("   "),
+            [],
+        )
 
     def test_equal_scores_are_ordered_by_sku(self):
         self.create_product(
             "HP-KI-010",
             "Large Storage Basket",
         )
+
         self.create_product(
             "HP-KI-009",
             "Small Storage Basket",
         )
 
-        results = search_products("storage basket")
+        results = search_products(
+            "storage basket"
+        )
 
         self.assertEqual(
-            [result.product.sku for result in results],
-            ["HP-KI-009", "HP-KI-010"],
+            [
+                result.product.sku
+                for result in results
+            ],
+            [
+                "HP-KI-009",
+                "HP-KI-010",
+            ],
         )
 
     def test_availability_messages_cover_all_statuses(self):
@@ -168,8 +219,14 @@ class ProductRetrievalTests(TestCase):
             ),
         )
 
-        for index, (status, stock_band, wording) in enumerate(cases):
-            with self.subTest(status=status):
+        for index, (
+            status,
+            stock_band,
+            wording,
+        ) in enumerate(cases):
+            with self.subTest(
+                status=status
+            ):
                 product = self.create_product(
                     f"HP-KI-{20 + index}",
                     f"Test Product {index}",
@@ -177,6 +234,47 @@ class ProductRetrievalTests(TestCase):
                     stock_band=stock_band,
                 )
 
-                message = get_availability_message(product)
+                message = (
+                    get_availability_message(
+                        product
+                    )
+                )
 
-                self.assertIn(wording, message.lower())
+                self.assertIn(
+                    wording,
+                    message.lower(),
+                )
+
+    def test_desk_context_prioritizes_office_product(
+        self,
+    ):
+        office_product = self.create_product(
+            "HP-OFF-001",
+            "Cove Desk Shelf",
+            category="Office",
+        )
+
+        self.create_product(
+            "HP-BTH-001",
+            "Drift Vanity Organizer",
+            category="Bath",
+        )
+
+        resolution = resolve_product(
+            "do you have anything similar to a desk organizer?"
+        )
+
+        self.assertEqual(
+            resolution.status,
+            "found",
+        )
+
+        self.assertEqual(
+            resolution.best_match.product,
+            office_product,
+        )
+
+        self.assertIn(
+            "category_context",
+            resolution.best_match.matched_fields,
+        )
