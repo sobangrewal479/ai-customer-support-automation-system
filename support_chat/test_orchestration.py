@@ -1070,6 +1070,8 @@ class CustomerKnowledgeSanitizationTests(TestCase):
             "mock",
             assistant_message.message.lower(),
         )
+
+
 class CustomerVoiceNormalizationTests(TestCase):
     def setUp(self):
         FAQ.objects.update(is_enabled=False)
@@ -1100,8 +1102,18 @@ class CustomerVoiceNormalizationTests(TestCase):
             "can you change the delivery address on my order for me?",
         )
 
+        self.assertEqual(
+            assistant_message.detected_intent,
+            ChatMessage.Intent.HANDOFF,
+        )
+
+        self.assertEqual(
+            assistant_message.decision_metadata["route"],
+            "address_change_handoff",
+        )
+
         self.assertIn(
-            "I can't change your delivery address directly.",
+            "I can't change a delivery address directly.",
             assistant_message.message,
         )
 
@@ -1259,6 +1271,8 @@ class CustomerVoiceNormalizationTests(TestCase):
             normalized_text,
             original_text,
         )
+
+
 class UnsupportedProductSpecificationTests(TestCase):
     def setUp(self):
         FAQ.objects.update(is_enabled=False)
@@ -1427,4 +1441,591 @@ class UnsupportedProductSpecificationTests(TestCase):
         self.assertNotEqual(
             assistant_message.decision_metadata["route"],
             "unsupported_product_specification",
+        )
+
+
+class CustomerRoutingSafetyV5Tests(TestCase):
+    BASE_FAQ_IDS = tuple(
+        f"FAQ-{number:03d}"
+        for number in range(1, 21)
+    )
+
+    def setUp(self):
+        FAQ.objects.filter(
+            faq_id__in=self.BASE_FAQ_IDS,
+        ).update(
+            is_enabled=True,
+        )
+
+        KnowledgeDocument.objects.update(
+            is_indexed=False,
+        )
+
+        self.session = ChatSession.objects.create(
+            privacy_acknowledged=True,
+        )
+
+    def create_product(self, sku, name, **overrides):
+        values = {
+            "category": "Office",
+            "short_description": (
+                "A practical office essential for organized "
+                "everyday spaces."
+            ),
+            "price_usd": Decimal("72.00"),
+            "status": Product.Status.ACTIVE,
+            "stock_band": Product.StockBand.HEALTHY,
+            "material": "Bamboo",
+            "color": "Natural",
+            "dimensions": "24 x 8 x 4 in",
+            "care_instructions": (
+                "Wipe with a soft damp cloth; do not soak."
+            ),
+            "product_url": (
+                "https://harborandpine.example/products/"
+                f"{sku.lower()}"
+            ),
+            "last_updated": date(2026, 7, 1),
+            "data_owner": "Catalog Manager",
+        }
+
+        values.update(overrides)
+
+        product, _ = Product.objects.update_or_create(
+            sku=sku,
+            defaults={
+                "product_name": name,
+                **values,
+            },
+        )
+
+        return product
+
+    def test_all_twenty_enabled_base_faqs_resolve_to_their_own_records(
+        self,
+    ):
+        faqs = list(
+            FAQ.objects.filter(
+                faq_id__in=self.BASE_FAQ_IDS,
+                is_enabled=True,
+            ).order_by("faq_id")
+        )
+
+        self.assertEqual(
+            len(faqs),
+            20,
+        )
+
+        self.assertEqual(
+            tuple(faq.faq_id for faq in faqs),
+            self.BASE_FAQ_IDS,
+        )
+
+        for faq in faqs:
+            with self.subTest(faq_id=faq.faq_id):
+                session = ChatSession.objects.create(
+                    privacy_acknowledged=True,
+                )
+
+                _, assistant_message = process_customer_message(
+                    session,
+                    faq.question,
+                )
+
+                self.assertEqual(
+                    assistant_message.detected_intent,
+                    ChatMessage.Intent.FAQ,
+                )
+
+                self.assertEqual(
+                    assistant_message.resolution_path,
+                    ChatSession.ResolutionPath.FAQ,
+                )
+
+                self.assertEqual(
+                    assistant_message.source_references[0][
+                        "source_id"
+                    ],
+                    faq.faq_id,
+                )
+
+                self.assertEqual(
+                    assistant_message.decision_metadata["route"],
+                    "exact_enabled_faq",
+                )
+
+                self.assertNotEqual(
+                    assistant_message.message,
+                    SAFE_FALLBACK,
+                )
+
+    def test_support_hours_returns_compact_customer_answer(self):
+        document = KnowledgeDocument.objects.create(
+            title="Harbor & Pine Support Guide",
+            version="1.0",
+            file="knowledge_documents/support-hours.pdf",
+            status=KnowledgeDocument.Status.ACTIVE,
+            is_indexed=True,
+        )
+
+        KnowledgeChunk.objects.create(
+            document=document,
+            chunk_index=0,
+            page_number=3,
+            section_title="Company and support profile",
+            content=(
+                "H&P Harbor & Pine Living Mock Knowledge Base "
+                "v1.0 Fictional practice document - not a real "
+                "company policy Page 3 SECTION 02 Company and "
+                "support profile. Business hours Mon-Fri 9 AM-6 "
+                "PM CT; Sat 10 AM-2 PM CT. Human response target "
+                "within one business day. Brand promise calm, "
+                "practical home essentials with dependable support."
+            ),
+        )
+
+        _, assistant_message = process_customer_message(
+            self.session,
+            "What are your customer support hours?",
+        )
+
+        self.assertEqual(
+            assistant_message.decision_metadata["route"],
+            "support_hours",
+        )
+
+        self.assertEqual(
+            assistant_message.detected_intent,
+            ChatMessage.Intent.DOCUMENT,
+        )
+
+        self.assertIn(
+            "Mon-Fri 9 AM-6 PM CT",
+            assistant_message.message,
+        )
+
+        self.assertIn(
+            "Sat 10 AM-2 PM CT",
+            assistant_message.message,
+        )
+
+        self.assertNotIn(
+            "Brand promise",
+            assistant_message.message,
+        )
+
+        self.assertLessEqual(
+            len(assistant_message.message.split()),
+            25,
+        )
+
+    def test_explicit_human_request_routes_before_support_faq(self):
+        _, assistant_message = process_customer_message(
+            self.session,
+            "can you point me to human support?",
+        )
+
+        self.assertEqual(
+            assistant_message.detected_intent,
+            ChatMessage.Intent.HANDOFF,
+        )
+
+        self.assertEqual(
+            assistant_message.resolution_path,
+            ChatSession.ResolutionPath.HANDOFF,
+        )
+
+        self.assertEqual(
+            assistant_message.decision_metadata["route"],
+            "explicit_human_handoff",
+        )
+
+        self.assertIn(
+            "human-support",
+            assistant_message.decision_metadata["next_url"],
+        )
+
+        self.assertEqual(
+            assistant_message.source_references,
+            [],
+        )
+
+    def test_human_response_time_paraphrase_stays_informational(self):
+        _, assistant_message = process_customer_message(
+            self.session,
+            "How long before a person replies to my support request?",
+        )
+
+        self.assertEqual(
+            assistant_message.detected_intent,
+            ChatMessage.Intent.FAQ,
+        )
+
+        self.assertEqual(
+            assistant_message.source_references[0]["source_id"],
+            "FAQ-018",
+        )
+
+        self.assertNotEqual(
+            assistant_message.decision_metadata["route"],
+            "explicit_human_handoff",
+        )
+
+    def test_bulk_quote_routes_to_lead_before_exact_product_match(self):
+        self.create_product(
+            "HPL-OFF-001",
+            "Cove Desk Shelf",
+        )
+
+        _, assistant_message = process_customer_message(
+            self.session,
+            (
+                "I want to get a bulk quote for 60 Cove Desk "
+                "Shelves for my business."
+            ),
+        )
+
+        self.assertEqual(
+            assistant_message.detected_intent,
+            ChatMessage.Intent.LEAD,
+        )
+
+        self.assertEqual(
+            assistant_message.resolution_path,
+            ChatSession.ResolutionPath.LEAD,
+        )
+
+        self.assertEqual(
+            assistant_message.decision_metadata["route"],
+            "bulk_quote_lead",
+        )
+
+        self.assertEqual(
+            assistant_message.decision_metadata["inquiry_type"],
+            "bulk_order",
+        )
+
+        self.assertNotEqual(
+            assistant_message.decision_metadata["route"],
+            "product",
+        )
+
+    def test_bulk_pricing_paraphrase_stays_informational(self):
+        _, assistant_message = process_customer_message(
+            self.session,
+            "Do you offer bulk pricing for larger orders?",
+        )
+
+        self.assertEqual(
+            assistant_message.detected_intent,
+            ChatMessage.Intent.FAQ,
+        )
+
+        self.assertEqual(
+            assistant_message.source_references[0]["source_id"],
+            "FAQ-019",
+        )
+
+        self.assertNotEqual(
+            assistant_message.decision_metadata["route"],
+            "bulk_quote_lead",
+        )
+
+    def test_trade_program_information_stays_faq(self):
+        _, assistant_message = process_customer_message(
+            self.session,
+            "Is there a trade program I can join?",
+        )
+
+        self.assertEqual(
+            assistant_message.detected_intent,
+            ChatMessage.Intent.FAQ,
+        )
+
+        self.assertEqual(
+            assistant_message.source_references[0]["source_id"],
+            "FAQ-020",
+        )
+
+        self.assertNotEqual(
+            assistant_message.decision_metadata["route"],
+            "trade_program_lead",
+        )
+
+    def test_trade_application_routes_to_lead_workflow(self):
+        _, assistant_message = process_customer_message(
+            self.session,
+            "I want to apply for the trade program.",
+        )
+
+        self.assertEqual(
+            assistant_message.detected_intent,
+            ChatMessage.Intent.LEAD,
+        )
+
+        self.assertEqual(
+            assistant_message.decision_metadata["route"],
+            "trade_program_lead",
+        )
+
+        self.assertEqual(
+            assistant_message.decision_metadata["inquiry_type"],
+            "trade_program",
+        )
+
+    def test_cancellation_information_paraphrase_stays_faq(self):
+        _, assistant_message = process_customer_message(
+            self.session,
+            "Is order cancellation possible?",
+        )
+
+        self.assertEqual(
+            assistant_message.detected_intent,
+            ChatMessage.Intent.FAQ,
+        )
+
+        self.assertEqual(
+            assistant_message.source_references[0]["source_id"],
+            "FAQ-009",
+        )
+
+        self.assertNotEqual(
+            assistant_message.decision_metadata["route"],
+            "order_cancellation_handoff",
+        )
+
+    def test_cancellation_action_routes_to_handoff(self):
+        _, assistant_message = process_customer_message(
+            self.session,
+            "Please cancel my order.",
+        )
+
+        self.assertEqual(
+            assistant_message.detected_intent,
+            ChatMessage.Intent.HANDOFF,
+        )
+
+        self.assertEqual(
+            assistant_message.decision_metadata["route"],
+            "order_cancellation_handoff",
+        )
+
+    def test_order_edit_action_routes_to_handoff(self):
+        _, assistant_message = process_customer_message(
+            self.session,
+            "Can you add an item to my order?",
+        )
+
+        self.assertEqual(
+            assistant_message.detected_intent,
+            ChatMessage.Intent.HANDOFF,
+        )
+
+        self.assertEqual(
+            assistant_message.decision_metadata["route"],
+            "order_edit_handoff",
+        )
+
+    def test_damage_event_routes_to_handoff(self):
+        _, assistant_message = process_customer_message(
+            self.session,
+            "My item arrived damaged.",
+        )
+
+        self.assertEqual(
+            assistant_message.detected_intent,
+            ChatMessage.Intent.HANDOFF,
+        )
+
+        self.assertEqual(
+            assistant_message.decision_metadata["route"],
+            "damage_handoff",
+        )
+
+        self.assertEqual(
+            assistant_message.decision_metadata["handoff_category"],
+            "complaint",
+        )
+
+    def test_safety_event_routes_to_urgent_handoff_path(self):
+        _, assistant_message = process_customer_message(
+            self.session,
+            "The product overheated and burned me.",
+        )
+
+        self.assertEqual(
+            assistant_message.detected_intent,
+            ChatMessage.Intent.HANDOFF,
+        )
+
+        self.assertEqual(
+            assistant_message.decision_metadata["route"],
+            "urgent_safety_handoff",
+        )
+
+        self.assertEqual(
+            assistant_message.decision_metadata["handoff_category"],
+            "safety_legal",
+        )
+
+        self.assertIn(
+            "stop using",
+            assistant_message.message.lower(),
+        )
+
+    def test_privacy_action_routes_to_handoff(self):
+        _, assistant_message = process_customer_message(
+            self.session,
+            "Please delete my personal data.",
+        )
+
+        self.assertEqual(
+            assistant_message.detected_intent,
+            ChatMessage.Intent.HANDOFF,
+        )
+
+        self.assertEqual(
+            assistant_message.decision_metadata["route"],
+            "privacy_request_handoff",
+        )
+
+        self.assertEqual(
+            assistant_message.decision_metadata["handoff_category"],
+            "privacy_request",
+        )
+
+    def test_payment_dispute_routes_to_handoff(self):
+        _, assistant_message = process_customer_message(
+            self.session,
+            "I was charged twice and need help.",
+        )
+
+        self.assertEqual(
+            assistant_message.detected_intent,
+            ChatMessage.Intent.HANDOFF,
+        )
+
+        self.assertEqual(
+            assistant_message.decision_metadata["route"],
+            "payment_refund_handoff",
+        )
+
+        self.assertEqual(
+            assistant_message.decision_metadata["handoff_category"],
+            "payment_refund",
+        )
+
+    def test_complaint_request_routes_to_handoff(self):
+        _, assistant_message = process_customer_message(
+            self.session,
+            "I want to file a complaint.",
+        )
+
+        self.assertEqual(
+            assistant_message.detected_intent,
+            ChatMessage.Intent.HANDOFF,
+        )
+
+        self.assertEqual(
+            assistant_message.decision_metadata["route"],
+            "complaint_handoff",
+        )
+
+    def test_policy_exception_request_routes_to_handoff(self):
+        _, assistant_message = process_customer_message(
+            self.session,
+            (
+                "Can you make an exception to the final-sale "
+                "return policy?"
+            ),
+        )
+
+        self.assertEqual(
+            assistant_message.detected_intent,
+            ChatMessage.Intent.HANDOFF,
+        )
+
+        self.assertEqual(
+            assistant_message.decision_metadata["route"],
+            "policy_exception_handoff",
+        )
+
+    def test_weak_unrelated_faq_overlap_falls_back(self):
+        _, assistant_message = process_customer_message(
+            self.session,
+            "Do you have a loyalty rewards points program?",
+        )
+
+        self.session.refresh_from_db()
+
+        self.assertEqual(
+            assistant_message.detected_intent,
+            ChatMessage.Intent.UNSUPPORTED,
+        )
+
+        self.assertEqual(
+            assistant_message.resolution_path,
+            ChatSession.ResolutionPath.FALLBACK,
+        )
+
+        self.assertEqual(
+            assistant_message.message,
+            SAFE_FALLBACK,
+        )
+
+        self.assertEqual(
+            UnansweredQuestion.objects.filter(
+                session=self.session,
+            ).count(),
+            1,
+        )
+
+    def test_exact_human_reply_faq_is_not_stolen_by_handoff_route(self):
+        faq = FAQ.objects.get(
+            faq_id="FAQ-018",
+        )
+
+        _, assistant_message = process_customer_message(
+            self.session,
+            faq.question,
+        )
+
+        self.assertEqual(
+            assistant_message.detected_intent,
+            ChatMessage.Intent.FAQ,
+        )
+
+        self.assertEqual(
+            assistant_message.source_references[0]["source_id"],
+            "FAQ-018",
+        )
+
+        self.assertEqual(
+            assistant_message.decision_metadata["route"],
+            "exact_enabled_faq",
+        )
+
+    def test_exact_bulk_pricing_faq_is_not_stolen_by_lead_route(self):
+        faq = FAQ.objects.get(
+            faq_id="FAQ-019",
+        )
+
+        _, assistant_message = process_customer_message(
+            self.session,
+            faq.question,
+        )
+
+        self.assertEqual(
+            assistant_message.detected_intent,
+            ChatMessage.Intent.FAQ,
+        )
+
+        self.assertEqual(
+            assistant_message.source_references[0]["source_id"],
+            "FAQ-019",
+        )
+
+        self.assertEqual(
+            assistant_message.decision_metadata["route"],
+            "exact_enabled_faq",
         )
