@@ -1,5 +1,6 @@
 import re
 from dataclasses import dataclass
+from difflib import SequenceMatcher
 
 from django.db import transaction
 from django.urls import reverse
@@ -146,19 +147,33 @@ RESTOCK_TIMING_CUES = (
 )
 
 
-ORDER_LOOKUP_PATTERNS = (
-    re.compile(
-        r"\bwhere\s+is\s+my\s+order\b"
-    ),
-    re.compile(
-        r"\b(?:where is|track|tracking|check|find)\b"
-        r".*\border\b"
-    ),
-    re.compile(
-        r"\border\b.*\b"
-        r"(?:status|track|tracking|delivery|arrive|arrival)\b"
-    ),
-)
+ORDER_LOOKUP_ACTION_CUES = {
+    "check",
+    "find",
+    "lookup",
+    "track",
+    "tracking",
+}
+
+
+ORDER_LOOKUP_STATE_CUES = {
+    "status",
+    "tracking",
+}
+
+
+ORDER_LOOKUP_EXCLUSION_CUES = {
+    "add",
+    "cancel",
+    "cancellation",
+    "edit",
+    "refund",
+    "remove",
+    "return",
+    "returns",
+    "substitute",
+    "swap",
+}
 
 
 SHIPPING_TIME_DURATION_CUES = (
@@ -533,6 +548,25 @@ def _matches(query, patterns):
     )
 
 
+def _matches_close_token(
+    token,
+    candidates,
+    minimum_ratio=0.80,
+):
+    if token in candidates:
+        return True
+
+    return any(
+        SequenceMatcher(
+            None,
+            token,
+            candidate,
+        ).ratio()
+        >= minimum_ratio
+        for candidate in candidates
+    )
+
+
 def is_greeting(query):
     return normalize_topic(query) in GREETING_WORDS
 
@@ -577,10 +611,62 @@ def is_unsupported_product_spec_question(query):
 
 
 def is_order_lookup_request(query):
-    return _matches(
-        query,
-        ORDER_LOOKUP_PATTERNS,
+    normalized_query = normalize_topic(
+        query
     )
+
+    normalized_query = (
+        normalized_query.replace(
+            "look up",
+            "lookup",
+        )
+    )
+
+    tokens = normalized_query.split()
+
+    has_order_context = any(
+        token in {
+            "order",
+            "orders",
+        }
+        for token in tokens
+    )
+
+    if not has_order_context:
+        return False
+
+    if any(
+        token in ORDER_LOOKUP_EXCLUSION_CUES
+        for token in tokens
+    ):
+        return False
+
+    if (
+        "where" in tokens
+        and "my" in tokens
+    ):
+        return True
+
+    has_state_cue = any(
+        _matches_close_token(
+            token,
+            ORDER_LOOKUP_STATE_CUES,
+        )
+        for token in tokens
+    )
+
+    if has_state_cue:
+        return True
+
+    has_lookup_action = any(
+        _matches_close_token(
+            token,
+            ORDER_LOOKUP_ACTION_CUES,
+        )
+        for token in tokens
+    )
+
+    return has_lookup_action
 
 
 def is_shipping_time_question(query):

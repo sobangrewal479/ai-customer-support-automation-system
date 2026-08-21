@@ -2029,3 +2029,185 @@ class CustomerRoutingSafetyV5Tests(TestCase):
             assistant_message.decision_metadata["route"],
             "exact_enabled_faq",
         )
+
+class ConversationalReliabilityV6RegressionTests(TestCase):
+    BASE_FAQ_IDS = tuple(
+        f"FAQ-{number:03d}"
+        for number in range(1, 21)
+    )
+
+    def setUp(self):
+        FAQ.objects.filter(
+            faq_id__in=self.BASE_FAQ_IDS,
+        ).update(
+            is_enabled=True,
+        )
+
+        KnowledgeDocument.objects.update(
+            is_indexed=False,
+        )
+
+        self.session = ChatSession.objects.create(
+            privacy_acknowledged=True,
+        )
+
+    def test_order_status_of_my_order_requires_secure_verification(
+        self,
+    ):
+        _, assistant_message = process_customer_message(
+            self.session,
+            "what is the status of my order?",
+        )
+
+        self.assertEqual(
+            assistant_message.detected_intent,
+            ChatMessage.Intent.ORDER,
+        )
+
+        self.assertEqual(
+            assistant_message.resolution_path,
+            ChatSession.ResolutionPath.ORDER,
+        )
+
+        self.assertEqual(
+            assistant_message.decision_metadata["route"],
+            "order_verification_required",
+        )
+
+        self.assertIn(
+            "exact order ID",
+            assistant_message.message,
+        )
+
+        self.assertIn(
+            "billing ZIP",
+            assistant_message.message,
+        )
+
+        self.assertEqual(
+            assistant_message.source_references,
+            [],
+        )
+
+    def test_lookup_my_order_requires_secure_verification(
+        self,
+    ):
+        _, assistant_message = process_customer_message(
+            self.session,
+            "can u lookup my order?",
+        )
+
+        self.assertEqual(
+            assistant_message.detected_intent,
+            ChatMessage.Intent.ORDER,
+        )
+
+        self.assertEqual(
+            assistant_message.resolution_path,
+            ChatSession.ResolutionPath.ORDER,
+        )
+
+        self.assertEqual(
+            assistant_message.decision_metadata["route"],
+            "order_verification_required",
+        )
+
+        self.assertIn(
+            "exact order ID",
+            assistant_message.message,
+        )
+
+        self.assertIn(
+            "billing ZIP",
+            assistant_message.message,
+        )
+
+        self.assertEqual(
+            assistant_message.source_references,
+            [],
+        )
+
+    def test_natural_order_lookup_paraphrases_require_verification(
+        self,
+    ):
+        queries = (
+            "can you check my order status?",
+            "could u look up my order for me?",
+            "i want to track my order",
+            "where can i check the status of my order?",
+            "order lookup please",
+            "can u chek my order status?",
+            "can u lokup my order?",
+        )
+
+        for query in queries:
+            with self.subTest(query=query):
+                session = ChatSession.objects.create(
+                    privacy_acknowledged=True,
+                )
+
+                _, assistant_message = process_customer_message(
+                    session,
+                    query,
+                )
+
+                self.assertEqual(
+                    assistant_message.detected_intent,
+                    ChatMessage.Intent.ORDER,
+                )
+
+                self.assertEqual(
+                    assistant_message.resolution_path,
+                    ChatSession.ResolutionPath.ORDER,
+                )
+
+                self.assertEqual(
+                    assistant_message.decision_metadata["route"],
+                    "order_verification_required",
+                )
+
+                self.assertIn(
+                    "exact order ID",
+                    assistant_message.message,
+                )
+
+                self.assertIn(
+                    "billing ZIP",
+                    assistant_message.message,
+                )
+
+                self.assertEqual(
+                    assistant_message.source_references,
+                    [],
+                )
+
+    def test_order_policy_questions_are_not_stolen_by_lookup_route(
+        self,
+    ):
+        queries = (
+            "Is order cancellation possible?",
+            "Can I add an item to my order?",
+            "Can I change my delivery address?",
+            "How long does standard shipping take?",
+        )
+
+        for query in queries:
+            with self.subTest(query=query):
+                session = ChatSession.objects.create(
+                    privacy_acknowledged=True,
+                )
+
+                _, assistant_message = process_customer_message(
+                    session,
+                    query,
+                )
+
+                self.assertNotEqual(
+                    assistant_message.detected_intent,
+                    ChatMessage.Intent.ORDER,
+                )
+
+                self.assertNotEqual(
+                    assistant_message.decision_metadata["route"],
+                    "order_verification_required",
+                )
