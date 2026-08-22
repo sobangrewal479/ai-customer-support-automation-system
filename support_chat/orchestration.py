@@ -333,6 +333,41 @@ GENERIC_PRODUCT_HELP_PATTERNS = (
 )
 
 
+SUPPORTED_PRODUCT_QUERY_CUES = (
+    "tell me about",
+    "more about",
+    "product details",
+    "details",
+    "description",
+    "price",
+    "cost",
+    "how much",
+    "material",
+    "made of",
+    "color",
+    "colour",
+    "dimension",
+    "dimensions",
+    "size",
+    "measurement",
+    "measurements",
+    "care",
+    "clean",
+    "cleaning",
+    "wash",
+    "stock",
+    "in stock",
+    "availability",
+    "available",
+    "out of stock",
+    "low stock",
+    "discontinued",
+    "category",
+    "collection",
+    "sku",
+)
+
+
 PRODUCT_CATEGORY_TERMS = {
     "home organization": "Home Organization",
     "kitchen": "Kitchen",
@@ -873,6 +908,44 @@ def is_generic_product_help_request(query):
     return _matches(
         query,
         GENERIC_PRODUCT_HELP_PATTERNS,
+    )
+
+
+def is_supported_product_record_question(
+    query,
+    product,
+):
+    normalized_query = normalize_topic(
+        query
+    )
+
+    normalized_name = normalize_topic(
+        product.product_name
+    )
+
+    normalized_sku = normalize_topic(
+        product.sku
+    )
+
+    if normalized_query in {
+        normalized_name,
+        normalized_sku,
+    }:
+        return True
+
+    targets_product = (
+        normalized_name in normalized_query
+        or normalized_sku in normalized_query
+    )
+
+    if not targets_product:
+        return False
+
+    return any(
+        cue in normalized_query
+        for cue in (
+            SUPPORTED_PRODUCT_QUERY_CUES
+        )
     )
 
 
@@ -2828,6 +2901,37 @@ def build_response(query):
         product = (
             best_match.product
         )
+
+        if not (
+            is_supported_product_record_question(
+                query,
+                product,
+            )
+        ):
+            return ChatResponse(
+                text=SAFE_FALLBACK,
+                intent=(
+                    ChatMessage.Intent.UNSUPPORTED
+                ),
+                resolution_path=(
+                    ChatSession.ResolutionPath.FALLBACK
+                ),
+                source_references=(),
+                decision_metadata={
+                    "route": (
+                        "unsupported_product_query"
+                    ),
+                    "score": (
+                        best_match.score
+                    ),
+                    "matched_fields": list(
+                        best_match.matched_fields
+                    ),
+                },
+                outcome=(
+                    ChatSession.Outcome.FALLBACK
+                ),
+            )
 
         return ChatResponse(
             text=compose_product_answer(

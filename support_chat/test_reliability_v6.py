@@ -364,3 +364,227 @@ class ConversationalReliabilityV6AdmissionTests(TestCase):
             ).count(),
             1,
         )
+
+    def test_off_topic_question_with_product_name_fails_closed(
+        self,
+    ):
+        self.create_product(
+            "HPL-OFF-002",
+            "Harbor Cable Box",
+        )
+
+        _, assistant_message = process_customer_message(
+            self.session,
+            (
+                "What is the weather today for "
+                "the Harbor Cable Box?"
+            ),
+        )
+
+        self.session.refresh_from_db()
+
+        self.assertEqual(
+            assistant_message.detected_intent,
+            ChatMessage.Intent.UNSUPPORTED,
+        )
+
+        self.assertEqual(
+            assistant_message.resolution_path,
+            ChatSession.ResolutionPath.FALLBACK,
+        )
+
+        self.assertEqual(
+            assistant_message.message,
+            SAFE_FALLBACK,
+        )
+
+        self.assertNotEqual(
+            assistant_message.decision_metadata[
+                "route"
+            ],
+            "product",
+        )
+
+        self.assertEqual(
+            UnansweredQuestion.objects.filter(
+                session=self.session,
+            ).count(),
+            1,
+        )
+
+    def test_unapproved_product_attribute_with_product_name_fails_closed(
+        self,
+    ):
+        self.create_product(
+            "HPL-OFF-002",
+            "Harbor Cable Box",
+        )
+
+        _, assistant_message = process_customer_message(
+            self.session,
+            "Is the Harbor Cable Box waterproof?",
+        )
+
+        self.session.refresh_from_db()
+
+        self.assertEqual(
+            assistant_message.detected_intent,
+            ChatMessage.Intent.UNSUPPORTED,
+        )
+
+        self.assertEqual(
+            assistant_message.resolution_path,
+            ChatSession.ResolutionPath.FALLBACK,
+        )
+
+        self.assertEqual(
+            assistant_message.message,
+            SAFE_FALLBACK,
+        )
+
+        self.assertNotEqual(
+            assistant_message.decision_metadata[
+                "route"
+            ],
+            "product",
+        )
+
+        self.assertEqual(
+            UnansweredQuestion.objects.filter(
+                session=self.session,
+            ).count(),
+            1,
+        )
+
+    def test_approved_product_material_question_still_uses_product_record(
+        self,
+    ):
+        product = self.create_product(
+            "HPL-OFF-002",
+            "Harbor Cable Box",
+        )
+
+        _, assistant_message = process_customer_message(
+            self.session,
+            (
+                "What material is the "
+                "Harbor Cable Box made of?"
+            ),
+        )
+
+        self.assertEqual(
+            assistant_message.detected_intent,
+            ChatMessage.Intent.PRODUCT,
+        )
+
+        self.assertEqual(
+            assistant_message.resolution_path,
+            ChatSession.ResolutionPath.PRODUCT,
+        )
+
+        self.assertEqual(
+            assistant_message.decision_metadata[
+                "route"
+            ],
+            "product",
+        )
+
+        self.assertEqual(
+            assistant_message.source_references[0][
+                "source_id"
+            ],
+            product.sku,
+        )
+
+        self.assertIn(
+            "Acacia wood",
+            assistant_message.message,
+        )
+
+        self.assertNotEqual(
+            assistant_message.message,
+            SAFE_FALLBACK,
+        )
+
+    def test_order_lookup_with_product_name_keeps_order_workflow(
+        self,
+    ):
+        self.create_product(
+            "HPL-OFF-002",
+            "Harbor Cable Box",
+        )
+
+        _, assistant_message = process_customer_message(
+            self.session,
+            (
+                "Can you check my order status "
+                "for the Harbor Cable Box?"
+            ),
+        )
+
+        self.assertEqual(
+            assistant_message.detected_intent,
+            ChatMessage.Intent.ORDER,
+        )
+
+        self.assertEqual(
+            assistant_message.resolution_path,
+            ChatSession.ResolutionPath.ORDER,
+        )
+
+        self.assertEqual(
+            assistant_message.decision_metadata[
+                "route"
+            ],
+            "order_verification_required",
+        )
+
+        self.assertIn(
+            "exact order ID",
+            assistant_message.message,
+        )
+
+        self.assertIn(
+            "billing ZIP",
+            assistant_message.message,
+        )
+
+    def test_human_request_with_product_name_keeps_handoff_workflow(
+        self,
+    ):
+        self.create_product(
+            "HPL-OFF-002",
+            "Harbor Cable Box",
+        )
+
+        _, assistant_message = process_customer_message(
+            self.session,
+            (
+                "I need to talk to a human about "
+                "the Harbor Cable Box."
+            ),
+        )
+
+        self.assertEqual(
+            assistant_message.detected_intent,
+            ChatMessage.Intent.HANDOFF,
+        )
+
+        self.assertEqual(
+            assistant_message.resolution_path,
+            ChatSession.ResolutionPath.HANDOFF,
+        )
+
+        self.assertEqual(
+            assistant_message.decision_metadata[
+                "route"
+            ],
+            "explicit_human_handoff",
+        )
+
+        self.assertNotEqual(
+            assistant_message.decision_metadata[
+                "route"
+            ],
+            "product",
+        )
