@@ -1,5 +1,6 @@
 import re
 from dataclasses import dataclass
+from difflib import SequenceMatcher
 
 from django.db import transaction
 from django.urls import reverse
@@ -125,6 +126,25 @@ UNSUPPORTED_WARRANTY_CUES = (
 )
 
 
+UNSUPPORTED_SAFETY_SUITABILITY_CUES = (
+    "safe for",
+    "safe around",
+    "safe with",
+    "child safe",
+    "children safe",
+    "kid safe",
+    "kids safe",
+    "pet safe",
+    "pets safe",
+    "food safe",
+    "food contact safe",
+    "suitable for children",
+    "suitable around children",
+    "suitable for kids",
+    "suitable for pets",
+)
+
+
 RESTOCK_TERMS = (
     "restock",
     "restocked",
@@ -146,19 +166,65 @@ RESTOCK_TIMING_CUES = (
 )
 
 
-ORDER_LOOKUP_PATTERNS = (
-    re.compile(
-        r"\bwhere\s+is\s+my\s+order\b"
+ORDER_LOOKUP_ACTION_CUES = {
+    "check",
+    "find",
+    "lookup",
+    "track",
+    "tracking",
+}
+
+
+ORDER_LOOKUP_STATE_CUES = {
+    "status",
+    "tracking",
+}
+
+
+ORDER_LOOKUP_EXCLUSION_CUES = {
+    "add",
+    "cancel",
+    "cancellation",
+    "edit",
+    "refund",
+    "remove",
+    "return",
+    "returns",
+    "substitute",
+    "swap",
+}
+
+
+INFORMATIONAL_FAQ_FAMILY_CUES = {
+    "Returns": (
+        "return shipping",
+        "return policy",
+        "returns policy",
+        "return window",
     ),
-    re.compile(
-        r"\b(?:where is|track|tracking|check|find)\b"
-        r".*\border\b"
+    "Shipping": (
+        "free shipping",
+        "shipping policy",
+        "shipping cost",
+        "shipping costs",
+        "shipping fee",
+        "shipping fees",
     ),
-    re.compile(
-        r"\border\b.*\b"
-        r"(?:status|track|tracking|delivery|arrive|arrival)\b"
+    "Bulk": (
+        "bulk",
+        "wholesale",
     ),
-)
+    "Privacy": (
+        "privacy policy",
+        "data privacy",
+        "personal data",
+        "personal information",
+    ),
+    "Trade": (
+        "trade program",
+        "trade account",
+    ),
+}
 
 
 SHIPPING_TIME_DURATION_CUES = (
@@ -264,6 +330,41 @@ GENERIC_PRODUCT_HELP_PATTERNS = (
         r"(?:with|about)\s+one\s+of\s+"
         r"(?:your|the)\s+products\b"
     ),
+)
+
+
+SUPPORTED_PRODUCT_QUERY_CUES = (
+    "tell me about",
+    "more about",
+    "product details",
+    "details",
+    "description",
+    "price",
+    "cost",
+    "how much",
+    "material",
+    "made of",
+    "color",
+    "colour",
+    "dimension",
+    "dimensions",
+    "size",
+    "measurement",
+    "measurements",
+    "care",
+    "clean",
+    "cleaning",
+    "wash",
+    "stock",
+    "in stock",
+    "availability",
+    "available",
+    "out of stock",
+    "low stock",
+    "discontinued",
+    "category",
+    "collection",
+    "sku",
 )
 
 
@@ -533,6 +634,25 @@ def _matches(query, patterns):
     )
 
 
+def _matches_close_token(
+    token,
+    candidates,
+    minimum_ratio=0.80,
+):
+    if token in candidates:
+        return True
+
+    return any(
+        SequenceMatcher(
+            None,
+            token,
+            candidate,
+        ).ratio()
+        >= minimum_ratio
+        for candidate in candidates
+    )
+
+
 def is_greeting(query):
     return normalize_topic(query) in GREETING_WORDS
 
@@ -551,8 +671,30 @@ def is_unsupported_load_question(query):
     )
 
 
+def is_unsupported_product_safety_spec_question(
+    query,
+):
+    normalized_query = normalize_topic(
+        query
+    )
+
+    return any(
+        cue in normalized_query
+        for cue in (
+            UNSUPPORTED_SAFETY_SUITABILITY_CUES
+        )
+    )
+
+
 def is_unsupported_product_spec_question(query):
     normalized_query = normalize_topic(query)
+
+    if (
+        is_unsupported_product_safety_spec_question(
+            query
+        )
+    ):
+        return True
 
     if any(
         cue in normalized_query
@@ -577,10 +719,84 @@ def is_unsupported_product_spec_question(query):
 
 
 def is_order_lookup_request(query):
-    return _matches(
-        query,
-        ORDER_LOOKUP_PATTERNS,
+    normalized_query = normalize_topic(
+        query
     )
+
+    normalized_query = (
+        normalized_query.replace(
+            "look up",
+            "lookup",
+        )
+    )
+
+    tokens = normalized_query.split()
+
+    has_order_context = any(
+        token in {
+            "order",
+            "orders",
+        }
+        for token in tokens
+    )
+
+    if not has_order_context:
+        return False
+
+    if any(
+        token in ORDER_LOOKUP_EXCLUSION_CUES
+        for token in tokens
+    ):
+        return False
+
+    if (
+        "where" in tokens
+        and "my" in tokens
+    ):
+        return True
+
+    has_state_cue = any(
+        _matches_close_token(
+            token,
+            ORDER_LOOKUP_STATE_CUES,
+        )
+        for token in tokens
+    )
+
+    if has_state_cue:
+        return True
+
+    has_lookup_action = any(
+        _matches_close_token(
+            token,
+            ORDER_LOOKUP_ACTION_CUES,
+        )
+        for token in tokens
+    )
+
+    return has_lookup_action
+
+
+def detect_informational_faq_family(
+    query,
+):
+    normalized_query = normalize_topic(
+        query
+    )
+
+    for (
+        category,
+        cues,
+    ) in (
+        INFORMATIONAL_FAQ_FAMILY_CUES.items()
+    ):
+        if any(
+            cue in normalized_query
+            for cue in cues
+        ):
+            return category
+
+    return None
 
 
 def is_shipping_time_question(query):
@@ -692,6 +908,44 @@ def is_generic_product_help_request(query):
     return _matches(
         query,
         GENERIC_PRODUCT_HELP_PATTERNS,
+    )
+
+
+def is_supported_product_record_question(
+    query,
+    product,
+):
+    normalized_query = normalize_topic(
+        query
+    )
+
+    normalized_name = normalize_topic(
+        product.product_name
+    )
+
+    normalized_sku = normalize_topic(
+        product.sku
+    )
+
+    if normalized_query in {
+        normalized_name,
+        normalized_sku,
+    }:
+        return True
+
+    targets_product = (
+        normalized_name in normalized_query
+        or normalized_sku in normalized_query
+    )
+
+    if not targets_product:
+        return False
+
+    return any(
+        cue in normalized_query
+        for cue in (
+            SUPPORTED_PRODUCT_QUERY_CUES
+        )
     )
 
 
@@ -1752,6 +2006,100 @@ def build_targeted_faq_response(
     return None
 
 
+def build_informational_faq_family_response(
+    query,
+):
+    category = (
+        detect_informational_faq_family(
+            query
+        )
+    )
+
+    if not category:
+        return None
+
+    knowledge_results = (
+        retrieve_knowledge(
+            query,
+            faq_limit=5,
+            document_limit=0,
+        )
+    )
+
+    compatible_results = [
+        result
+        for result in knowledge_results
+        if (
+            result.source_type == "faq"
+            and normalize_topic(
+                result.category
+            )
+            == normalize_topic(
+                category
+            )
+        )
+    ]
+
+    (
+        best_result,
+        safe_content,
+    ) = (
+        get_customer_safe_knowledge_result(
+            compatible_results,
+            query=query,
+        )
+    )
+
+    if best_result:
+        return ChatResponse(
+            text=safe_content,
+            intent=(
+                ChatMessage.Intent.FAQ
+            ),
+            resolution_path=(
+                ChatSession.ResolutionPath.FAQ
+            ),
+            source_references=(
+                build_knowledge_source(
+                    best_result
+                ),
+            ),
+            decision_metadata={
+                "route": (
+                    "informational_faq_family"
+                ),
+                "faq_family": category,
+                "score": (
+                    best_result.score
+                ),
+            },
+            outcome=(
+                ChatSession.Outcome.RESOLVED
+            ),
+        )
+
+    return ChatResponse(
+        text=SAFE_FALLBACK,
+        intent=(
+            ChatMessage.Intent.UNSUPPORTED
+        ),
+        resolution_path=(
+            ChatSession.ResolutionPath.FALLBACK
+        ),
+        source_references=(),
+        decision_metadata={
+            "route": (
+                "informational_faq_family_"
+                "unconfirmed"
+            ),
+            "faq_family": category,
+        },
+        outcome=(
+            ChatSession.Outcome.FALLBACK
+        ),
+    )
+
+
 def build_exact_enabled_faq_response(
     query,
 ):
@@ -2395,6 +2743,15 @@ def build_response(query):
         if response:
             return response
 
+    informational_faq_response = (
+        build_informational_faq_family_response(
+            query
+        )
+    )
+
+    if informational_faq_response:
+        return informational_faq_response
+
     if is_unsupported_load_question(
         query
     ):
@@ -2544,6 +2901,37 @@ def build_response(query):
         product = (
             best_match.product
         )
+
+        if not (
+            is_supported_product_record_question(
+                query,
+                product,
+            )
+        ):
+            return ChatResponse(
+                text=SAFE_FALLBACK,
+                intent=(
+                    ChatMessage.Intent.UNSUPPORTED
+                ),
+                resolution_path=(
+                    ChatSession.ResolutionPath.FALLBACK
+                ),
+                source_references=(),
+                decision_metadata={
+                    "route": (
+                        "unsupported_product_query"
+                    ),
+                    "score": (
+                        best_match.score
+                    ),
+                    "matched_fields": list(
+                        best_match.matched_fields
+                    ),
+                },
+                outcome=(
+                    ChatSession.Outcome.FALLBACK
+                ),
+            )
 
         return ChatResponse(
             text=compose_product_answer(
