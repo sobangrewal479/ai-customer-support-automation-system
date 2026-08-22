@@ -199,3 +199,168 @@ class ConversationalReliabilityV6AdmissionTests(TestCase):
             ).count(),
             1,
         )
+
+    def test_shipping_policy_with_product_name_is_not_stolen_by_product_route(
+        self,
+    ):
+        FAQ.objects.create(
+            faq_id="TEST-V6-SHIPPING-POLICY",
+            category="Shipping",
+            question=(
+                "Does free shipping apply to "
+                "every order?"
+            ),
+            approved_answer=(
+                "Free standard shipping applies "
+                "only when the approved order "
+                "threshold and eligibility rules "
+                "are met."
+            ),
+            keywords=(
+                "free shipping order eligibility "
+                "threshold"
+            ),
+            is_enabled=True,
+        )
+
+        self.create_product(
+            "HPL-OFF-002",
+            "Harbor Cable Box",
+        )
+
+        _, assistant_message = process_customer_message(
+            self.session,
+            (
+                "Does free shipping apply to "
+                "the Harbor Cable Box?"
+            ),
+        )
+
+        self.assertEqual(
+            assistant_message.detected_intent,
+            ChatMessage.Intent.FAQ,
+        )
+
+        self.assertEqual(
+            assistant_message.resolution_path,
+            ChatSession.ResolutionPath.FAQ,
+        )
+
+        self.assertEqual(
+            assistant_message.source_references[0][
+                "source_id"
+            ],
+            "TEST-V6-SHIPPING-POLICY",
+        )
+
+        self.assertNotEqual(
+            assistant_message.decision_metadata[
+                "route"
+            ],
+            "product",
+        )
+
+    def test_return_policy_with_product_name_is_not_stolen_by_product_route(
+        self,
+    ):
+        FAQ.objects.create(
+            faq_id="TEST-V6-RETURN-SHIPPING",
+            category="Returns",
+            question=(
+                "Who pays return shipping?"
+            ),
+            approved_answer=(
+                "Customers normally pay return "
+                "shipping for preference-based "
+                "returns."
+            ),
+            keywords=(
+                "return shipping cost customer "
+                "preference returns"
+            ),
+            is_enabled=True,
+        )
+
+        self.create_product(
+            "HPL-OFF-002",
+            "Harbor Cable Box",
+        )
+
+        _, assistant_message = process_customer_message(
+            self.session,
+            (
+                "Who pays return shipping for "
+                "the Harbor Cable Box?"
+            ),
+        )
+
+        self.assertEqual(
+            assistant_message.detected_intent,
+            ChatMessage.Intent.FAQ,
+        )
+
+        self.assertEqual(
+            assistant_message.resolution_path,
+            ChatSession.ResolutionPath.FAQ,
+        )
+
+        self.assertEqual(
+            assistant_message.source_references[0][
+                "source_id"
+            ],
+            "TEST-V6-RETURN-SHIPPING",
+        )
+
+        self.assertNotEqual(
+            assistant_message.decision_metadata[
+                "route"
+            ],
+            "product",
+        )
+
+    def test_unapproved_product_safety_spec_with_product_name_fails_closed(
+        self,
+    ):
+        self.create_product(
+            "HPL-OFF-002",
+            "Harbor Cable Box",
+        )
+
+        _, assistant_message = process_customer_message(
+            self.session,
+            (
+                "Is the Harbor Cable Box safe "
+                "for use around children?"
+            ),
+        )
+
+        self.session.refresh_from_db()
+
+        self.assertEqual(
+            assistant_message.detected_intent,
+            ChatMessage.Intent.UNSUPPORTED,
+        )
+
+        self.assertEqual(
+            assistant_message.resolution_path,
+            ChatSession.ResolutionPath.FALLBACK,
+        )
+
+        self.assertEqual(
+            assistant_message.message,
+            SAFE_FALLBACK,
+        )
+
+        self.assertNotEqual(
+            assistant_message.decision_metadata[
+                "route"
+            ],
+            "product",
+        )
+
+        self.assertEqual(
+            UnansweredQuestion.objects.filter(
+                session=self.session,
+            ).count(),
+            1,
+        )

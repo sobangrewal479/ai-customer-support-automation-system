@@ -126,6 +126,25 @@ UNSUPPORTED_WARRANTY_CUES = (
 )
 
 
+UNSUPPORTED_SAFETY_SUITABILITY_CUES = (
+    "safe for",
+    "safe around",
+    "safe with",
+    "child safe",
+    "children safe",
+    "kid safe",
+    "kids safe",
+    "pet safe",
+    "pets safe",
+    "food safe",
+    "food contact safe",
+    "suitable for children",
+    "suitable around children",
+    "suitable for kids",
+    "suitable for pets",
+)
+
+
 RESTOCK_TERMS = (
     "restock",
     "restocked",
@@ -177,6 +196,20 @@ ORDER_LOOKUP_EXCLUSION_CUES = {
 
 
 INFORMATIONAL_FAQ_FAMILY_CUES = {
+    "Returns": (
+        "return shipping",
+        "return policy",
+        "returns policy",
+        "return window",
+    ),
+    "Shipping": (
+        "free shipping",
+        "shipping policy",
+        "shipping cost",
+        "shipping costs",
+        "shipping fee",
+        "shipping fees",
+    ),
     "Bulk": (
         "bulk",
         "wholesale",
@@ -603,8 +636,30 @@ def is_unsupported_load_question(query):
     )
 
 
+def is_unsupported_product_safety_spec_question(
+    query,
+):
+    normalized_query = normalize_topic(
+        query
+    )
+
+    return any(
+        cue in normalized_query
+        for cue in (
+            UNSUPPORTED_SAFETY_SUITABILITY_CUES
+        )
+    )
+
+
 def is_unsupported_product_spec_question(query):
     normalized_query = normalize_topic(query)
+
+    if (
+        is_unsupported_product_safety_spec_question(
+            query
+        )
+    ):
+        return True
 
     if any(
         cue in normalized_query
