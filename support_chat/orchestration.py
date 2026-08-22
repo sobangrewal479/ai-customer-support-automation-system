@@ -176,6 +176,24 @@ ORDER_LOOKUP_EXCLUSION_CUES = {
 }
 
 
+INFORMATIONAL_FAQ_FAMILY_CUES = {
+    "Bulk": (
+        "bulk",
+        "wholesale",
+    ),
+    "Privacy": (
+        "privacy policy",
+        "data privacy",
+        "personal data",
+        "personal information",
+    ),
+    "Trade": (
+        "trade program",
+        "trade account",
+    ),
+}
+
+
 SHIPPING_TIME_DURATION_CUES = (
     "how long",
     "how many days",
@@ -667,6 +685,28 @@ def is_order_lookup_request(query):
     )
 
     return has_lookup_action
+
+
+def detect_informational_faq_family(
+    query,
+):
+    normalized_query = normalize_topic(
+        query
+    )
+
+    for (
+        category,
+        cues,
+    ) in (
+        INFORMATIONAL_FAQ_FAMILY_CUES.items()
+    ):
+        if any(
+            cue in normalized_query
+            for cue in cues
+        ):
+            return category
+
+    return None
 
 
 def is_shipping_time_question(query):
@@ -1838,6 +1878,100 @@ def build_targeted_faq_response(
     return None
 
 
+def build_informational_faq_family_response(
+    query,
+):
+    category = (
+        detect_informational_faq_family(
+            query
+        )
+    )
+
+    if not category:
+        return None
+
+    knowledge_results = (
+        retrieve_knowledge(
+            query,
+            faq_limit=5,
+            document_limit=0,
+        )
+    )
+
+    compatible_results = [
+        result
+        for result in knowledge_results
+        if (
+            result.source_type == "faq"
+            and normalize_topic(
+                result.category
+            )
+            == normalize_topic(
+                category
+            )
+        )
+    ]
+
+    (
+        best_result,
+        safe_content,
+    ) = (
+        get_customer_safe_knowledge_result(
+            compatible_results,
+            query=query,
+        )
+    )
+
+    if best_result:
+        return ChatResponse(
+            text=safe_content,
+            intent=(
+                ChatMessage.Intent.FAQ
+            ),
+            resolution_path=(
+                ChatSession.ResolutionPath.FAQ
+            ),
+            source_references=(
+                build_knowledge_source(
+                    best_result
+                ),
+            ),
+            decision_metadata={
+                "route": (
+                    "informational_faq_family"
+                ),
+                "faq_family": category,
+                "score": (
+                    best_result.score
+                ),
+            },
+            outcome=(
+                ChatSession.Outcome.RESOLVED
+            ),
+        )
+
+    return ChatResponse(
+        text=SAFE_FALLBACK,
+        intent=(
+            ChatMessage.Intent.UNSUPPORTED
+        ),
+        resolution_path=(
+            ChatSession.ResolutionPath.FALLBACK
+        ),
+        source_references=(),
+        decision_metadata={
+            "route": (
+                "informational_faq_family_"
+                "unconfirmed"
+            ),
+            "faq_family": category,
+        },
+        outcome=(
+            ChatSession.Outcome.FALLBACK
+        ),
+    )
+
+
 def build_exact_enabled_faq_response(
     query,
 ):
@@ -2480,6 +2614,15 @@ def build_response(query):
 
         if response:
             return response
+
+    informational_faq_response = (
+        build_informational_faq_family_response(
+            query
+        )
+    )
+
+    if informational_faq_response:
+        return informational_faq_response
 
     if is_unsupported_load_question(
         query
